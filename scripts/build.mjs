@@ -213,7 +213,7 @@ const FN = {
     const lines = [
       `<title>${esc(title)}</title>`,
       `<meta name="description" content="${esc(page.description)}">`,
-      page.noindex ? '<meta name="robots" content="noindex, follow">' : '<meta name="robots" content="index, follow, max-image-preview:large">',
+      page.noindex || site.noindex ? '<meta name="robots" content="noindex, nofollow">' : '<meta name="robots" content="index, follow, max-image-preview:large">',
       `<link rel="canonical" href="${url}">`,
       `<meta property="og:site_name" content="${esc(site.brand)}">`,
       `<meta property="og:locale" content="ru_RU">`,
@@ -301,7 +301,7 @@ function buildPage({ src, file, extra = {}, metaOverride = {} }) {
   const { meta, body } = parsePage(src, file);
   const page = { out: basename(file), nav: '', scripts: [], schema: [], crumbs: [], ...meta, ...metaOverride };
   // 404.html отдаётся по любому адресу, поэтому у неё пути от корня домена
-  const R = page.abs ? '/' : page.out.includes('/') ? '../' : '';
+  const R = page.abs ? new URL(site.domain).pathname.replace(/\/?$/, '/') : page.out.includes('/') ? '../' : '';
   const ctx = { site, page, R, ...extra };
   ctx.content = render(body, ctx);
   let html = render(partial('layout'), ctx);
@@ -339,7 +339,9 @@ for (const b of bikes) {
 const prio = (p) => (p.out === 'index.html' ? '1.0' : p.out === 'catalog.html' ? '0.9' : p.out.startsWith('bikes/') ? '0.8' : /privacy|terms|cookies|consent/.test(p.out) ? '0.3' : '0.6');
 const urls = built.filter((p) => !p.noindex).map((p) => `  <url><loc>${abs(p.out)}</loc><lastmod>${site.lastmod}</lastmod><changefreq>${p.out.startsWith('bikes/') || p.out === 'catalog.html' ? 'weekly' : 'monthly'}</changefreq><priority>${prio(p)}</priority></url>`);
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`);
-write('robots.txt', `User-agent: *\nAllow: /\nDisallow: /404.html\n\nSitemap: ${site.domain}/sitemap.xml\n`);
+write('robots.txt', site.noindex
+  ? 'User-agent: *\nDisallow: /\n' // тестовый домен закрыт от индексации (site.noindex в site.config.json)
+  : `User-agent: *\nAllow: /\nDisallow: /404.html\n\nSitemap: ${site.domain}/sitemap.xml\n`);
 write('site.webmanifest', JSON.stringify({
   name: `${site.brand} — мотосалон в ${site.cityIn}`, short_name: site.brand, lang: 'ru', start_url: './index.html', display: 'standalone',
   background_color: '#0b0b0c', theme_color: '#0b0b0c',

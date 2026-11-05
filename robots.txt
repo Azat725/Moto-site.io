@@ -1,5 +1,2 @@
 User-agent: *
-Allow: /
-Disallow: /404.html
-
-Sitemap: https://ivax-moto.ru/sitemap.xml
+Disallow: /

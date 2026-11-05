@@ -22,7 +22,8 @@ for (const f of files) {
   for (const m of html.matchAll(/\s(?:href|src)="([^"#?][^"]*?)(?:[?#][^"]*)?"/g)) {
     const u = m[1];
     if (/^(https?:|mailto:|tel:|data:|\/\/|javascript:)/.test(u)) continue;
-    const p = u.startsWith('/') ? join(ROOT, u) : resolve(join(ROOT, dirname(f)), u);
+    const base = new URL(JSON.parse(readFileSync(join(ROOT, 'site.config.json'), 'utf8')).domain).pathname.replace(/\/$/, '');
+    const p = u.startsWith('/') ? join(ROOT, u.startsWith(base + '/') ? u.slice(base.length) : u) : resolve(join(ROOT, dirname(f)), u);
     if (f === '404.html' && u.startsWith('/')) { if (!existsSync(p)) fail(`${f}: нет файла ${u}`); continue; }
     if (!existsSync(p) || statSync(p).isDirectory() && !existsSync(join(p, 'index.html'))) fail(`${f}: битая ссылка ${u}`);
   }
