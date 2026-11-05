@@ -1,0 +1,84 @@
+/* ==========================================================
+   IV&AX MOTO — дизайн-токены (цвета, шрифты, отступы, easing)
+   Палитра: красный / белый / чёрный
+   ========================================================== */
+:root {
+  color-scheme: dark;
+
+  /* Цвета */
+  --black: #0b0b0c;
+  --ink: #111113;
+  --graphite: #17171a;
+  --graphite-2: #202024;
+  --white: #ffffff;
+  --paper: #f4f4f5;
+  --gray: #a1a1a6;
+  --gray-dark: #5d5d63;
+
+  --red: #e10600;        /* фон кнопок, акценты (белый текст на нём — контраст 5:1) */
+  --red-hot: #ff3b30;    /* красный ТЕКСТ на тёмном фоне (контраст 5.5:1) */
+  --red-deep: #9d0400;
+  --red-glow: rgba(225, 6, 0, 0.45);
+
+  /* Семантика (тёмная тема по умолчанию) */
+  --bg: var(--black);
+  --bg-alt: var(--ink);
+  --surface: var(--graphite);
+  --surface-2: var(--graphite-2);
+  --text: var(--white);
+  --text-muted: var(--gray);
+  --line: rgba(255, 255, 255, 0.12);
+  --accent-text: var(--red-hot);
+
+  /* Шрифты: системные (без внешних запросов — быстрее и безопаснее для ПДн) */
+  --font-display: "Bahnschrift", "DIN Condensed", "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Impact, sans-serif;
+  --font-body: "Segoe UI", "Inter", "Helvetica Neue", Arial, system-ui, -apple-system, sans-serif;
+
+  /* Размеры */
+  --container: 1280px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --section-y: clamp(64px, 9vw, 128px);
+  --radius: 18px;
+  --radius-sm: 10px;
+  --header-h: 72px;
+  --topbar-h: 38px;
+  --tap: 48px;
+
+  /* Типографика */
+  --fs-hero: clamp(2.5rem, 5.4vw + 0.6rem, 6rem);
+  --fs-h1: clamp(2.1rem, 4.6vw + 0.4rem, 4.2rem);
+  --fs-h2: clamp(1.8rem, 3.2vw + 0.4rem, 3.2rem);
+  --fs-h3: clamp(1.25rem, 1.2vw + 0.9rem, 1.6rem);
+  --fs-lg: clamp(1.05rem, 0.4vw + 1rem, 1.25rem);
+
+  /* Анимация */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --t-fast: 0.2s;
+  --t: 0.5s;
+  --t-slow: 0.9s;
+
+  --shadow-red: 0 18px 50px -12px var(--red-glow);
+  --shadow-card: 0 20px 60px -24px rgba(0, 0, 0, 0.8);
+}
+
+/* Светлые секции (чередуем с тёмными) */
+.section--light {
+  color-scheme: light;
+  --bg: var(--white);
+  --bg-alt: var(--paper);
+  --surface: var(--white);
+  --surface-2: var(--paper);
+  --text: var(--black);
+  --text-muted: #55555b;
+  --line: rgba(0, 0, 0, 0.12);
+  --accent-text: var(--red);
+}
+
+@media (max-width: 720px) {
+  :root {
+    --header-h: 64px;
+    --radius: 14px;
+  }
+}

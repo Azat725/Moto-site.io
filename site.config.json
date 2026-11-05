@@ -1,0 +1,21 @@
+{
+  "brand": "IV&AX MOTO",
+  "brandHtml": "IV<b>&amp;</b>AX MOTO",
+  "domain": "https://ivax-moto.ru",
+  "city": "Нижнекамск",
+  "cityIn": "Нижнекамске",
+  "region": "Республика Татарстан",
+  "legalName": "[Полное наименование юридического лица / ФИО индивидуального предпринимателя]",
+  "inn": "[ИНН]",
+  "ogrn": "[ОГРН / ОГРНИП]",
+  "address": "г. Нижнекамск, [улица, дом]",
+  "phone": "+7 (900) 000-00-00",
+  "phoneRaw": "+79000000000",
+  "email": "info@ivax-moto.ru",
+  "hours": "Пн–Сб 10:00–20:00, Вс 11:00–18:00",
+  "geo": { "lat": 55.6367, "lon": 51.8209 },
+  "socials": { "vk": "", "telegram": "", "youtube": "", "whatsapp": "" },
+  "verification": { "yandex": "", "google": "", "bing": "" },
+  "docsDate": "5 ноября 2026 г.",
+  "lastmod": "2026-11-05"
+}

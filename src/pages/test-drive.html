@@ -1,0 +1,36 @@
+<!--page
+{
+  "out": "test-drive.html",
+  "nav": "test-drive",
+  "title": "Тест-драйв мотоцикла в Нижнекамске — запись онлайн",
+  "description": "Запишитесь на тест-драйв мотоцикла в Нижнекамске в салоне IV&AX MOTO: выберите модель, оставьте телефон — мы согласуем время и подготовим байк.",
+  "crumbs": [["Тест-драйв", "test-drive.html"]]
+}
+-->
+<section class="page-hero">
+  <div class="container">
+    {{@crumbs}}
+    <h1 class="split" data-split><span class="accent">Тест-драйв</span> мотоцикла в&nbsp;{{site.cityIn}}</h1>
+    <p class="lead">Лучший способ выбрать мотоцикл — проехать на нём. Запишитесь, и мы подготовим выбранную модель к вашему приезду.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container split-section split-section--top">
+    <div data-reveal="left">
+      <span class="eyebrow">Как проходит</span>
+      <h2>Что нужно для тест-драйва</h2>
+      <ul class="check-list">
+        <li>Паспорт и водительское удостоверение с открытой категорией «A» (или «A1» для лёгких моделей)</li>
+        <li>Мотоэкипировка: шлем, перчатки, защита — мы подскажем, что подготовить</li>
+        <li>Согласование времени с менеджером заранее</li>
+        <li>Подписание документов перед выездом</li>
+      </ul>
+      <p style="margin-top:24px;color:var(--text-muted)">Условия проведения тест-драйва (маршрут, продолжительность, залог и ответственность) определяются салоном и согласуются при записи. <span class="ph" style="background:rgba(225,6,0,.14);border-bottom:2px dashed var(--red);padding:0 4px">[Заполнить: условия тест-драйва]</span></p>
+    </div>
+    <div class="lead-box" data-reveal="right" id="apply">
+      <h2 style="font-size:1.8rem">Записаться на тест-драйв</h2>
+{{@lead_form:testdrive}}
+    </div>
+  </div>
+</section>

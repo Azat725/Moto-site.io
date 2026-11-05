@@ -1,0 +1,51 @@
+<!--page
+{
+  "out": "credit.html",
+  "nav": "credit",
+  "title": "Мотоцикл в рассрочку и кредит в Нижнекамске — калькулятор платежа",
+  "description": "Купить мотоцикл в рассрочку или кредит в Нижнекамске: рассчитайте ежемесячный платёж онлайн и оставьте заявку в салоне IV&AX MOTO.",
+  "scripts": ["calc.js"],
+  "crumbs": [["Рассрочка и кредит", "credit.html"]]
+}
+-->
+<section class="page-hero">
+  <div class="container">
+    {{@crumbs}}
+    <h1 class="split" data-split>Мотоцикл в <span class="accent">рассрочку</span> и кредит</h1>
+    <p class="lead">Рассчитайте ориентировочный платёж, а затем оставьте заявку — менеджер подберёт программу и расскажет об условиях банков-партнёров.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div data-reveal="zoom">
+{{> calc}}
+    </div>
+  </div>
+</section>
+
+<section class="section section--light">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Что понадобится</span>
+      <h2>Документы и условия</h2>
+    </div>
+    <div class="grid grid--3" data-stagger>
+      <article class="feature" data-reveal data-n="01"><div class="feature__icon">{{@icon:key}}</div><h3>Паспорт</h3><p>Для оформления заявки достаточно паспорта. Дополнительные документы банк может запросить индивидуально.</p></article>
+      <article class="feature" data-reveal data-n="02"><div class="feature__icon">{{@icon:wallet}}</div><h3>Первоначальный взнос</h3><p>Размер взноса и срок влияют на ежемесячный платёж. Подберём оптимальный вариант.</p></article>
+      <article class="feature" data-reveal data-n="03"><div class="feature__icon">{{@icon:shield}}</div><h3>Решение банка</h3><p>Одобрение, ставка и условия определяются банком. Салон не гарантирует одобрение заявки.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt section--dark-alt" id="apply">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Заявка</span>
+      <h2>Оставить заявку на рассрочку / кредит</h2>
+    </div>
+    <div class="lead-box" data-reveal>
+{{@lead_form:credit}}
+    </div>
+  </div>
+</section>

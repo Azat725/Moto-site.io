@@ -1,0 +1,177 @@
+<!--page
+{
+  "out": "index.html",
+  "nav": "home",
+  "title": "Купить мотоцикл в Нижнекамске — мотосалон IV&AX MOTO",
+  "description": "Купить мотоцикл в Нижнекамске: новые и подержанные мото, тест-драйв, рассрочка и trade-in. Каталог спортбайков, нейкедов и круизеров в мотосалоне IV&AX MOTO.",
+  "schema": ["dealer", "website", "faq"],
+  "scripts": ["calc.js"]
+}
+-->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="speed-lines" data-speed-lines aria-hidden="true"></div>
+  <div class="container hero__grid">
+    <div class="hero__copy">
+      <p class="hero__tag" data-reveal><i></i> Мотосалон {{site.brandHtml}} · {{site.city}}</p>
+      <h1 id="hero-title" class="split" data-split data-split-base="0.9">Купить <span class="accent">мотоцикл</span> <span class="outline-text">в Нижнекамске</span></h1>
+      <p class="hero__lead" data-reveal style="--d:1.5s">Новые и подержанные мото на любой вкус и бюджет: спорт, нейкеды, круизеры. Тест-драйв, рассрочка и trade-in — выберите свой байк и почувствуйте скорость.</p>
+      <div class="hero__actions" data-reveal style="--d:1.7s">
+        <a class="btn pulse" href="{{R}}catalog.html" data-magnetic>Смотреть каталог {{@icon:arrow}}</a>
+        <a class="btn btn--ghost" href="{{R}}test-drive.html" data-magnetic>Записаться на тест-драйв</a>
+      </div>
+      <ul class="hero__meta" data-reveal style="--d:1.9s">
+        <li>{{@icon:flag}} Тест-драйв</li>
+        <li>{{@icon:wallet}} Рассрочка и кредит</li>
+        <li>{{@icon:repeat}} Trade-in</li>
+      </ul>
+    </div>
+    <div class="hero__stage" data-parallax-root>
+      <div class="hero__ring hero-glow hero__layer" data-depth="-14" aria-hidden="true"></div>
+      <div class="hero__layer" data-depth="10">{{@hero_bike}}</div>
+      <div class="road" aria-hidden="true"></div>
+      <span class="hero__chip hero__chip--1 hero__layer" data-depth="26">{{@icon:flag}} Тест-драйв</span>
+      <span class="hero__chip hero__chip--2 hero__layer" data-depth="34">{{@icon:wallet}} Рассрочка</span>
+      <span class="hero__chip hero__chip--3 hero__layer" data-depth="20">{{@icon:repeat}} Trade-in</span>
+    </div>
+  </div>
+  <div class="scroll-hint" aria-hidden="true"><i></i></div>
+</section>
+
+<div class="marquee" aria-hidden="true">
+  <div class="marquee__track">
+    <div class="marquee__group"><span>Мотоциклы</span><span class="dot"></span><span>Тест-драйв</span><span class="dot"></span><span>Рассрочка</span><span class="dot"></span><span>Trade-in</span><span class="dot"></span><span>Экипировка</span><span class="dot"></span><span>Нижнекамск</span><span class="dot"></span><span>Мотоциклы</span><span class="dot"></span><span>Тест-драйв</span><span class="dot"></span><span>Рассрочка</span><span class="dot"></span><span>Trade-in</span><span class="dot"></span><span>Экипировка</span><span class="dot"></span><span>Нижнекамск</span><span class="dot"></span></div>
+    <div class="marquee__group"><span>Мотоциклы</span><span class="dot"></span><span>Тест-драйв</span><span class="dot"></span><span>Рассрочка</span><span class="dot"></span><span>Trade-in</span><span class="dot"></span><span>Экипировка</span><span class="dot"></span><span>Нижнекамск</span><span class="dot"></span><span>Мотоциклы</span><span class="dot"></span><span>Тест-драйв</span><span class="dot"></span><span>Рассрочка</span><span class="dot"></span><span>Trade-in</span><span class="dot"></span><span>Экипировка</span><span class="dot"></span><span>Нижнекамск</span><span class="dot"></span></div>
+  </div>
+</div>
+
+<section class="section section--light" aria-labelledby="why-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Почему мы</span>
+      <h2 id="why-title" class="split" data-split>Покупка мотоцикла — без лишних <span class="accent">нервов</span></h2>
+      <p class="lead">Помогаем на каждом шаге: от выбора модели до выдачи ключей.</p>
+    </div>
+    <div class="grid grid--4" data-stagger>
+      <article class="feature" data-reveal data-n="01">
+        <div class="feature__icon">{{@icon:flag}}</div>
+        <h3>Тест-драйв</h3>
+        <p>Прокатитесь на мотоцикле до покупки: запишитесь онлайн или по телефону — подготовим байк к вашему приезду.</p>
+      </article>
+      <article class="feature" data-reveal data-n="02">
+        <div class="feature__icon">{{@icon:wallet}}</div>
+        <h3>Рассрочка и кредит</h3>
+        <p>Подберём программу через банки-партнёры. Предварительный платёж можно рассчитать в калькуляторе ниже.</p>
+      </article>
+      <article class="feature" data-reveal data-n="03">
+        <div class="feature__icon">{{@icon:repeat}}</div>
+        <h3>Trade-in</h3>
+        <p>Сдайте свой мотоцикл в зачёт нового. Стоимость определим после осмотра и диагностики.</p>
+      </article>
+      <article class="feature" data-reveal data-n="04">
+        <div class="feature__icon">{{@icon:shield}}</div>
+        <h3>Помощь с оформлением</h3>
+        <p>Подскажем по документам, страхованию и постановке на учёт — чтобы вы просто сели и поехали.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="popular-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Популярные модели</span>
+      <h2 id="popular-title" class="split" data-split>Выберите свой <span class="accent">мотоцикл</span></h2>
+      <p class="lead">Несколько моделей из нашего каталога. Все цены и характеристики — ориентировочные.</p>
+    </div>
+    <div class="grid grid--3" data-stagger>
+{{@home_cards}}
+    </div>
+    <p style="margin-top:36px;text-align:center" data-reveal><a class="btn btn--ghost" href="{{R}}catalog.html" data-magnetic>Смотреть весь каталог ({{@bikes_count}}) {{@icon:arrow}}</a></p>
+  </div>
+</section>
+
+<section class="section section--alt section--dark-alt" id="calculator" aria-labelledby="calc-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Калькулятор</span>
+      <h2 id="calc-title" class="split" data-split>Рассчитайте <span class="accent">платёж</span></h2>
+      <p class="lead">Двигайте ползунки — платёж пересчитается мгновенно.</p>
+    </div>
+    <div data-reveal="zoom">
+{{> calc}}
+    </div>
+  </div>
+</section>
+
+<section class="section section--light" aria-labelledby="about-title">
+  <div class="container split-section">
+    <div data-reveal="left">
+      <div class="visual-box">{{@bike_art:naked}}<span class="tag">Иллюстрация-заглушка</span></div>
+    </div>
+    <div data-reveal="right">
+      <span class="eyebrow">О салоне</span>
+      <h2 id="about-title">{{site.brandHtml}} — мотосалон в {{site.cityIn}}</h2>
+      <p>Мы помогаем выбрать мотоцикл под ваш стиль езды, бюджет и опыт: от первого лёгкого байка до мощного спортбайка. Приезжайте в салон, садитесь, смотрите вживую — а мы подскажем и поможем с оформлением.</p>
+      <ul class="check-list">
+        <li>Новые и подержанные мотоциклы</li>
+        <li>Честное описание состояния и пробега</li>
+        <li>Рассрочка, кредит и trade-in</li>
+      </ul>
+      <p style="margin-top:24px"><span class="ph" style="background:rgba(225,6,0,.12);border-bottom:2px dashed var(--red);padding:0 4px;font-size:.85rem">Текст-заглушка: расскажите историю компании, партнёров, сервис</span></p>
+      <a class="btn btn--dark" href="{{R}}about.html" data-magnetic>Подробнее о нас {{@icon:arrow}}</a>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-label="Цифры">
+  <div class="container">
+    <div class="stats" data-stagger>
+      <div class="stat" data-reveal><b data-count="{{@bikes_count}}">{{@bikes_count}}</b><span>моделей в каталоге</span></div>
+      <div class="stat" data-reveal><b data-count="3">3</b><span>способа оплаты: наличные, рассрочка, кредит</span></div>
+      <div class="stat" data-reveal><b data-count="7">7</b><span>дней в неделю на связи</span></div>
+      <div class="stat" data-reveal><b>24/7</b><span>приём заявок на сайте</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt section--dark-alt" aria-labelledby="steps-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Как это работает</span>
+      <h2 id="steps-title" class="split" data-split>Четыре шага до <span class="accent">ключей</span></h2>
+    </div>
+    <ol class="steps" data-stagger>
+      <li data-reveal><h3>Выберите модель</h3><p>Изучите каталог или позвоните — подскажем подходящий вариант.</p></li>
+      <li data-reveal><h3>Тест-драйв</h3><p>Запишитесь и прокатитесь. Возьмите права и шлем — остальное обсудим.</p></li>
+      <li data-reveal><h3>Оформление</h3><p>Оплата наличными, рассрочка или кредит; trade-in вашего мотоцикла.</p></li>
+      <li data-reveal><h3>Получите ключи</h3><p>Передаём мотоцикл и документы. Остаётся поехать.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="section" id="faq" aria-labelledby="faq-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Вопросы и ответы</span>
+      <h2 id="faq-title" class="split" data-split>Частые <span class="accent">вопросы</span></h2>
+    </div>
+    <div class="accordion" data-reveal>
+{{@faq_items}}
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt section--dark-alt" id="callback" aria-labelledby="callback-title">
+  <div class="container">
+    <div class="cta-band" data-reveal="zoom" style="margin-bottom:clamp(32px,5vw,56px)">
+      <div>
+        <h2 id="callback-title">Остались вопросы? Мы перезвоним</h2>
+        <p>Оставьте имя и телефон — менеджер свяжется с вами в рабочее время и ответит на все вопросы.</p>
+      </div>
+      <a class="btn" href="tel:{{site.phoneRaw}}" data-magnetic>{{@icon:phone}} {{site.phone}}</a>
+    </div>
+    <div class="lead-box" data-reveal>
+{{@lead_form:callback}}
+    </div>
+  </div>
+</section>

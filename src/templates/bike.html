@@ -1,0 +1,79 @@
+<!--page
+{ "out": "bikes/placeholder.html", "title": "x", "description": "x" }
+-->
+<section class="page-hero">
+  <div class="container">
+    {{@crumbs}}
+    <h1 class="split" data-split>Купить {{bike.fullName}} {{bike.year}} в&nbsp;{{site.cityIn}}</h1>
+    <p class="lead">{{bike.short}}</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container product">
+    <div class="gallery" data-reveal="left">
+      <div class="gallery__main">
+        {{@bike_art}}
+        <p class="gallery__note">Иллюстрация-заглушка · фото будут добавлены</p>
+      </div>
+    </div>
+    <div class="product__info" data-reveal="right">
+      <div>{{@bike_badges}} <span class="badge badge--outline">{{bike.condLabel}}</span></div>
+      <h2 style="margin:0;font-size:clamp(1.6rem,2.4vw+.6rem,2.4rem)">{{bike.fullName}} {{bike.year}}</h2>
+      <div class="product__price"><b>{{bike.priceText}}</b><small>ориентировочная цена, уточняйте у менеджера</small></div>
+      <div class="mini-specs">
+        <div><b>{{bike.cc}}</b><span>см³</span></div>
+        <div><b>{{bike.hp}}</b><span>л.с.</span></div>
+        <div><b>{{bike.mileageText}}</b><span>пробег</span></div>
+      </div>
+      <div class="product__actions">
+        <a class="btn pulse" href="#order" data-magnetic>Узнать цену и наличие {{@icon:arrow}}</a>
+        <a class="btn btn--ghost" href="{{R}}test-drive.html" data-magnetic>Записаться на тест-драйв</a>
+        <a class="btn btn--ghost" href="tel:{{site.phoneRaw}}">{{@icon:phone}} {{site.phone}}</a>
+      </div>
+      <p class="product__disclaimer">Информация не является публичной офертой. Цена, комплектация и наличие уточняются при обращении.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section--light" aria-labelledby="specs-title">
+  <div class="container split-section split-section--top">
+    <div data-reveal>
+      <span class="eyebrow">Характеристики</span>
+      <h2 id="specs-title">{{bike.fullName}}: технические данные</h2>
+      {{@bike_specs}}
+    </div>
+    <div data-reveal>
+      <span class="eyebrow">Описание</span>
+      <h2>О мотоцикле</h2>
+      {{@bike_description}}
+      <h3 style="margin-top:28px">Особенности</h3>
+      {{@bike_features}}
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt section--dark-alt" id="order" aria-labelledby="order-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Заявка</span>
+      <h2 id="order-title">Хочу {{bike.fullName}}</h2>
+      <p class="lead">Оставьте контакты — уточним цену, наличие и ответим на вопросы.</p>
+    </div>
+    <div class="lead-box" data-reveal>
+{{@lead_form:bike}}
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="related-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Ещё в каталоге</span>
+      <h2 id="related-title">Похожие модели</h2>
+    </div>
+    <div class="grid grid--3" data-stagger>
+{{@related}}
+    </div>
+  </div>
+</section>

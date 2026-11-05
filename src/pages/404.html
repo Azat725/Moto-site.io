@@ -1,0 +1,21 @@
+<!--page
+{
+  "out": "404.html",
+  "title": "Страница не найдена — 404",
+  "description": "Такой страницы нет. Вернитесь на главную или посмотрите каталог мотоциклов IV&AX MOTO.",
+  "noindex": true,
+  "abs": true
+}
+-->
+<section class="e404">
+  <div>
+    <div class="big" aria-hidden="true">404</div>
+    {{@bike_art:naked}}
+    <h1 style="font-size:clamp(1.6rem,4vw,2.6rem)">Кажется, мы свернули не туда</h1>
+    <p style="color:var(--gray);max-width:46ch;margin:0 auto 26px">Страницы нет или она переехала. Вернитесь на главную или загляните в каталог.</p>
+    <div class="hero__actions" style="justify-content:center">
+      <a class="btn" href="{{R}}index.html" data-magnetic>На главную</a>
+      <a class="btn btn--ghost" href="{{R}}catalog.html" data-magnetic>В каталог</a>
+    </div>
+  </div>
+</section>

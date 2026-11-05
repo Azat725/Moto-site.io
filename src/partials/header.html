@@ -1,0 +1,65 @@
+<header class="site-header" id="site-header">
+    <div class="topbar">
+      <div class="container topbar__in">
+        <div class="topbar__meta">
+          <span>{{@icon:pin}} {{site.city}}, {{site.region}}</span>
+          <span>{{@icon:clock}} {{site.hours}}</span>
+        </div>
+        <a href="tel:{{site.phoneRaw}}">{{@icon:phone}} {{site.phone}}</a>
+      </div>
+    </div>
+    <div class="navbar">
+      <div class="container navbar__in">
+        <a class="logo" href="{{R}}index.html" aria-label="{{site.brand}} — на главную">
+          {{@logo_mark}}
+          <span>{{site.brandHtml}}<small>{{site.city}}</small></span>
+        </a>
+        <nav class="nav" aria-label="Основное меню">
+          <ul>
+            <li><a href="{{R}}catalog.html" data-nav="catalog">Каталог</a></li>
+            <li><a href="{{R}}test-drive.html" data-nav="test-drive">Тест-драйв</a></li>
+            <li><a href="{{R}}credit.html" data-nav="credit">Рассрочка</a></li>
+            <li><a href="{{R}}about.html" data-nav="about">О салоне</a></li>
+            <li><a href="{{R}}contacts.html" data-nav="contacts">Контакты</a></li>
+          </ul>
+        </nav>
+        <div class="navbar__cta">
+          <a class="navbar__phone" href="tel:{{site.phoneRaw}}">{{site.phone}}</a>
+          <a class="btn btn--sm" href="{{R}}test-drive.html" data-magnetic>Тест-драйв</a>
+        </div>
+        <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mobile-menu" id="mobile-menu" aria-label="Мобильное меню">
+    <nav aria-label="Мобильное меню">
+      <ul>
+        <li style="--i:0"><a class="mm-link" href="{{R}}catalog.html" data-nav="catalog">Каталог {{@icon:arrow}}</a></li>
+        <li style="--i:1"><a class="mm-link" href="{{R}}test-drive.html" data-nav="test-drive">Тест-драйв {{@icon:arrow}}</a></li>
+        <li style="--i:2"><a class="mm-link" href="{{R}}credit.html" data-nav="credit">Рассрочка {{@icon:arrow}}</a></li>
+        <li style="--i:3"><a class="mm-link" href="{{R}}about.html" data-nav="about">О салоне {{@icon:arrow}}</a></li>
+        <li style="--i:4"><a class="mm-link" href="{{R}}contacts.html" data-nav="contacts">Контакты {{@icon:arrow}}</a></li>
+      </ul>
+    </nav>
+    <div class="mobile-menu__foot">
+      <a href="tel:{{site.phoneRaw}}">{{site.phone}}</a>
+      <span>{{site.address}}</span>
+      <span>{{site.hours}}</span>
+    </div>
+  </div>
+
+  <div class="mobile-bar" id="mobile-bar">
+    <a class="btn btn--ghost" href="tel:{{site.phoneRaw}}">{{@icon:phone}} Позвонить</a>
+    <a class="btn" href="{{R}}test-drive.html">{{@icon:flag}} Тест-драйв</a>
+  </div>
+
+  <button class="gauge" id="gauge" type="button" aria-label="Наверх. Прочитано страницы: 0%">
+    <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <path class="g-track" d="M23.13 76.87A38 38 0 1 1 76.87 76.87"/>
+      <path class="g-zone" d="M87.53 44.06A38 38 0 0 1 76.87 76.87"/>
+      <g class="g-needle"><line x1="50" y1="50" x2="50" y2="18"/></g>
+      <circle class="g-hub" cx="50" cy="50" r="5"/>
+      <path class="g-arrow" d="M43 70L50 63L57 70"/>
+    </svg>
+  </button>

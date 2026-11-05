@@ -1,0 +1,27 @@
+<section class="cookie" id="cookie" role="dialog" aria-modal="false" aria-labelledby="cookie-title" aria-describedby="cookie-text">
+    <h2 id="cookie-title">Мы используем cookie</h2>
+    <p id="cookie-text">Необходимые cookie обеспечивают работу сайта. Аналитические и маркетинговые файлы мы включаем только с вашего согласия. Выбор можно изменить в любой момент в подвале сайта. Подробнее — в <a href="{{R}}cookies.html">Политике cookie</a> и <a href="{{R}}privacy.html">Политике конфиденциальности</a>.</p>
+    <fieldset class="cookie__prefs">
+      <legend class="sr-only">Категории cookie</legend>
+      <label>
+        <span><b>Необходимые</b></span>
+        <small>Работа меню, форм, сохранение вашего выбора. Отключить нельзя.</small>
+        <span class="switch"><input type="checkbox" checked disabled aria-label="Необходимые cookie"><i></i></span>
+      </label>
+      <label>
+        <span><b>Аналитика</b></span>
+        <small>Статистика посещений (например, Яндекс.Метрика) — помогает улучшать сайт.</small>
+        <span class="switch"><input type="checkbox" data-cookie-cat="analytics" aria-label="Аналитические cookie"><i></i></span>
+      </label>
+      <label>
+        <span><b>Маркетинг</b></span>
+        <small>Персонализация и реклама на сторонних площадках.</small>
+        <span class="switch"><input type="checkbox" data-cookie-cat="marketing" aria-label="Маркетинговые cookie"><i></i></span>
+      </label>
+    </fieldset>
+    <div class="cookie__actions">
+      <button class="btn btn--sm" type="button" data-cookie-accept>Принять все</button>
+      <button class="btn btn--sm btn--ghost" type="button" data-cookie-necessary>Только необходимые</button>
+      <button class="btn btn--sm btn--ghost" type="button" data-cookie-toggle aria-expanded="false">Настроить</button>
+    </div>
+  </section>
