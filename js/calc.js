@@ -9,7 +9,7 @@
     var price = box.querySelector("[data-calc-price]"), down = box.querySelector("[data-calc-down]"), term = box.querySelector("[data-calc-term]");
     var outMonth = box.querySelector("[data-calc-month]"), outDown = box.querySelector("[data-calc-downsum]"),
         outLoan = box.querySelector("[data-calc-loan]"), outOver = box.querySelector("[data-calc-over]"), outRate = box.querySelector("[data-calc-rate]");
-    var shownMonth = 0, raf = 0;
+    var shownMonth = 0, raf = 0, settle = 0;
 
     // Подставляем цену из ?price= (например, со страницы модели)
     var qp = new URLSearchParams(location.search).get("price");
@@ -22,6 +22,8 @@
     function animateMonth(to) {
       if (reduce) { outMonth.textContent = fmt(to); shownMonth = to; return; }
       cancelAnimationFrame(raf);
+      clearTimeout(settle);
+      settle = setTimeout(function () { shownMonth = to; outMonth.textContent = fmt(to); }, 450); // если rAF «спит» (фоновая вкладка)
       var from = shownMonth, t0 = performance.now();
       (function step(now) {
         var p = Math.min(1, (now - t0) / 400), e = 1 - Math.pow(1 - p, 3);

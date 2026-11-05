@@ -76,7 +76,7 @@ const LOGO_MARK = '<svg class="logo__mark" viewBox="0 0 48 48" aria-hidden="true
 // ---------- Карточки ----------
 function card(b, R) {
   const badges = (b.badges ?? []).slice(0, 2).map((t, i) => `<span class="badge${i ? ' badge--white' : ''}">${esc(t)}</span>`).join('');
-  return `<div class="bike-item" data-reveal data-type="${b.type}" data-condition="${b.condition}" data-price="${b.price}" data-year="${b.year}" data-cc="${b.cc}" data-name="${esc((b.brand + ' ' + b.model + ' ' + b.year).toLowerCase())}">
+  return `<div class="bike-item" data-reveal data-type="${b.type}" data-condition="${b.condition}" data-price="${b.price}" data-year="${b.year}" data-cc="${b.cc}" data-name="${esc((b.fullName + ' ' + b.year).toLowerCase())}">
   <article class="bike-card tilt">
     <div class="bike-card__art">
       <div class="bike-card__badges">${badges}</div>
