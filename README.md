@@ -67,6 +67,7 @@ docs/              документация
 ```
 
 ## Документация
+- [Docker Compose: установка и обновление одной командой](docs/deploy-docker.md)
 - [DEPLOYMENT_VPS.md](DEPLOYMENT_VPS.md) — полная инструкция SSH → установка → приёмка → обновление и восстановление
 - [docs/architecture.md](docs/architecture.md) — устройство кода, модель данных, цены, курс, безопасность
 - [docs/deploy-vps.md](docs/deploy-vps.md) — установка и обновление на сервере в РФ
@@ -82,6 +83,12 @@ docs/              документация
   (`https://github.com/<владелец>/Moto-site.io/invitations`). Либо *Settings → Collaborators → Add people*.
 
 ## Перед запуском рабочего сайта
+Для Docker используйте [docs/deploy-docker.md](docs/deploy-docker.md). После первичной настройки обновление:
+
+```bash
+cd /srv/ivax/app && git pull --ff-only && sh deploy/docker/update.sh
+```
+
 1. Сервер в РФ, домен, `.env`, службы — по [docs/deploy-vps.md](docs/deploy-vps.md).
 2. В админке «Настройки сайта» — реальные телефон, e-mail, адрес, продавец, ИНН, ОГРН (сейчас заглушки `[…]`).
 3. Юридические документы (`templates/pages/legal/`) — согласовать с юристом. **Шаблоны не заменяют консультацию юриста.**

@@ -208,6 +208,7 @@ ivax-notify.service (send_notifications --loop, каждые 5 с):
 | pytest, pytest-django, pytest-cov, responses, playwright | Только для разработки (`requirements-dev.txt`) |
 
 ## Связанные документы
+- [deploy-docker.md](deploy-docker.md) — контейнеры, постоянные тома, подготовка базы и обновление
 - [deploy-vps.md](deploy-vps.md) — установка и обновление на сервере
 - [admin-guide.md](admin-guide.md) — инструкция для владельца
 - [import-format.md](import-format.md) — формат таблицы импорта каталога
