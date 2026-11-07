@@ -20,6 +20,7 @@
 python -m venv .venv
 # Windows: .venv\Scripts\activate      Linux/macOS: source .venv/bin/activate
 pip install -r requirements-dev.txt
+python -c "from pathlib import Path; Path('data').mkdir(exist_ok=True)"
 python manage.py migrate
 python manage.py seed_catalog        # 15 моделей, опции, цвета, фото из apps/catalog/seed/
 python manage.py update_rate         # курс USD с сайта ЦБ РФ
