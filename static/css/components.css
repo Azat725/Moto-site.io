@@ -265,6 +265,7 @@
 .field__error { display: none; color: var(--red-hot); font-size: 0.85rem; }
 .section--light .field__error { color: var(--red); }
 .field.is-invalid .field__error { display: block; }
+[data-consent-error]:not([hidden]) { display: block; }
 .hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 @keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
 

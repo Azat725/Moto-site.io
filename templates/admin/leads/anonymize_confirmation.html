@@ -1,0 +1,14 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Главная</a> › <a href="{% url 'admin:leads_lead_changelist' %}">Заявки</a> › Обезличивание</div>{% endblock %}
+{% block content %}
+  <p>Будут удалены имя, телефон, комментарий, заметка менеджера и хэш IP, а также текст уведомлений выбранных заявок. Отменить это действие нельзя.</p>
+  <ul>{% for object in objects %}<li>{{ object }}</li>{% endfor %}</ul>
+  <form method="post">{% csrf_token %}
+    {% for object in objects %}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ object.pk }}">{% endfor %}
+    <input type="hidden" name="action" value="anonymize">
+    <input type="hidden" name="select_across" value="{{ select_across }}">
+    <input type="hidden" name="confirm" value="yes">
+    <input type="submit" value="Подтвердить обезличивание">
+    <a href="{% url 'admin:leads_lead_changelist' %}">Отмена</a>
+  </form>
+{% endblock %}

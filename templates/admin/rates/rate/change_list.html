@@ -1,0 +1,5 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools-items %}
+  {% if can_refresh %}<li><form method="post" action="{% url 'admin:rates_rate_refresh' %}">{% csrf_token %}<button type="submit">Обновить курс с ЦБ РФ</button></form></li>{% endif %}
+  {{ block.super }}
+{% endblock %}

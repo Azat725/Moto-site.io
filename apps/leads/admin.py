@@ -1,11 +1,14 @@
 import csv
 
 from django.contrib import admin, messages
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from django.http import HttpResponse
+from django.template.response import TemplateResponse
 from django.utils import timezone
 from django.utils.html import format_html_join
 
 from .models import Lead, Outbox
+from .delivery import requeue_notifications
 from .services import anonymize_leads
 
 FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
@@ -34,9 +37,17 @@ class LeadAdmin(admin.ModelAdmin):
     list_editable = ("status",)
     search_fields = ("name", "phone", "model_name", "message")
     date_hierarchy = "created_at"
+    ordering = ("-created_at", "-pk")
+    list_per_page = 25
     readonly_fields = ("created_at", "kind", "name", "phone", "contact_way", "message", "model_name",
                        "configuration", "total_rub", "consent_at", "consent_version", "page", "anonymized_at")
-    fields = ("status", "manager_note", *readonly_fields)
+    fieldsets = (
+        ("Обработка", {"fields": ("status", "manager_note", "anonymized_at")}),
+        ("Контакты покупателя", {"fields": ("name", "phone", "contact_way", "message")}),
+        ("Заявка и цена на момент отправки", {"fields": ("created_at", "kind", "model_name", "configuration",
+                                                       "total_rub", "page")}),
+        ("Согласие", {"fields": ("consent_at", "consent_version")}),
+    )
     inlines = [OutboxInline]
     actions = ["mark_in_progress", "mark_done", "export_csv", "anonymize"]
 
@@ -62,6 +73,13 @@ class LeadAdmin(admin.ModelAdmin):
 
     @admin.action(description="Обезличить (удалить персональные данные)", permissions=["delete"])
     def anonymize(self, request, queryset):
+        if request.POST.get("confirm") != "yes":
+            context = self.admin_site.each_context(request) | {
+                "title": "Подтвердить обезличивание", "opts": self.model._meta,
+                "objects": queryset, "action_checkbox_name": ACTION_CHECKBOX_NAME,
+                "select_across": request.POST.get("select_across", "0"),
+            }
+            return TemplateResponse(request, "admin/leads/anonymize_confirmation.html", context)
         count = anonymize_leads(queryset)
         self.message_user(request, f"Обезличено заявок: {count}", messages.SUCCESS)
 
@@ -87,6 +105,11 @@ class LeadAdmin(admin.ModelAdmin):
 class OutboxAdmin(admin.ModelAdmin):
     list_display = ("created_at", "channel", "subject", "status", "attempts", "next_attempt_at", "last_error")
     list_filter = ("status", "channel")
+    search_fields = ("=lead__id", "subject", "last_error")
+    list_select_related = ("lead",)
+    ordering = ("-created_at", "-pk")
+    date_hierarchy = "created_at"
+    list_per_page = 50
     readonly_fields = ("channel", "subject", "body", "lead", "status", "attempts", "next_attempt_at", "last_error",
                        "locked_until", "created_at", "sent_at")
     actions = ["retry_now"]
@@ -96,11 +119,8 @@ class OutboxAdmin(admin.ModelAdmin):
 
     @admin.action(description="Повторить отправку сейчас", permissions=["change"])
     def retry_now(self, request, queryset):
-        ids = list(queryset.exclude(status=Outbox.Status.SENT).values_list("pk", flat=True))
-        Outbox.objects.filter(pk__in=ids, status=Outbox.Status.DEAD).update(
-            status=Outbox.Status.PENDING, next_attempt_at=timezone.now(), attempts=0)
-        Outbox.objects.filter(pk__in=ids, status=Outbox.Status.PENDING).update(next_attempt_at=timezone.now())
-        self.message_user(request, f"Поставлено в очередь: {len(ids)}. Отправитель обработает их в течение нескольких секунд.",
+        count = requeue_notifications(queryset)
+        self.message_user(request, f"Поставлено в очередь: {count}. Отправитель обработает их при следующем запуске.",
                           messages.INFO)
 
     def has_delete_permission(self, request, obj=None):

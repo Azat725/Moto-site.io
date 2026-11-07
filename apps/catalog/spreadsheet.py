@@ -123,6 +123,10 @@ def build_workbook(models: list[dict], option_codes: list[tuple[str, str]]) -> b
             row["published"] = "да" if model.get("published") else "нет"
             row["popular"] = "да" if model.get("popular") else "нет"
             sheet.append([_cell(row.get(key)) for key, _ in columns])
+            # Явный строковый тип исключает формулы без добавления символов в исходный текст.
+            for cell in sheet[sheet.max_row]:
+                if isinstance(cell.value, str):
+                    cell.data_type = "s"
     buffer = io.BytesIO()
     workbook.save(buffer)
     return buffer.getvalue()
@@ -132,4 +136,4 @@ def _cell(value):
     if value is None:
         return ""
     text = str(value)
-    return "'" + text if text[:1] in ("=", "+", "@") else value if isinstance(value, (int, float)) else text
+    return value if isinstance(value, (int, float)) else text

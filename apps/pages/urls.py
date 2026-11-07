@@ -32,7 +32,7 @@ urlpatterns = [
     path("sitemap.xml", sitemap, {"sitemaps": SITEMAPS}, name="sitemap"),
     # старые адреса статического сайта
     re_path(r"^bikes/(?P<slug>[a-z0-9-]+)\.html$", RedirectView.as_view(url="/catalog/", permanent=True)),
-    re_path(r"^(test-drive|credit|catalog)\.html$", RedirectView.as_view(pattern_name="pages:catalog", permanent=True)),
+    re_path(r"^(?:test-drive|credit|catalog)\.html$", RedirectView.as_view(pattern_name="pages:catalog", permanent=True)),
     re_path(r"^index\.html$", RedirectView.as_view(pattern_name="pages:home", permanent=True)),
     re_path(r"^(?P<page>about|contacts|privacy|consent|terms|cookies)\.html$",
             RedirectView.as_view(url="/%(page)s/", permanent=True), name="legacy_page"),

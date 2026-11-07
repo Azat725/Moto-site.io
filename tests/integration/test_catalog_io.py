@@ -44,10 +44,7 @@ class TestConverters:
         with pytest.raises(CatalogError, match="отрицательной"):
             to_decimal("-1", "Цена")
 
-    @pytest.mark.xfail(reason="BUG: catalog_io.py:59-64 'nan'/'inf' pass Decimal() and then raise uncaught "
-                              "decimal.InvalidOperation on compare/quantize instead of CatalogError",
-                       strict=True, raises=ArithmeticError)
-    @pytest.mark.parametrize("value", ["nan", "inf"])
+    @pytest.mark.parametrize("value", ["nan", "NaN", "inf", "-Infinity", "sNaN"])
     def test_to_decimal_rejects_nan_and_infinity(self, value):
         with pytest.raises(CatalogError):
             to_decimal(value, "Цена")
@@ -68,7 +65,8 @@ class TestNormalizeModel:
         assert result["variants"][0] == {"label": "5 kW 100Ah", "price_usd": Decimal("1000.00"), "battery_ah": 100}
         assert result["variants"][1]["motor_power_w"] == 8000
         assert result["options"] == {"abs": "150.00", "usb": "included"}
-        assert result["colors"] == "all"
+        assert result["option_scope"] is None
+        assert result["colors"] is None, "нет колонки цветов — цвета модели не трогаем"
 
     def test_does_not_mutate_input(self):
         raw = raw_model()
@@ -91,6 +89,23 @@ class TestNormalizeModel:
     def test_blank_slug(self):
         with pytest.raises(CatalogError):
             normalize_model(raw_model(slug="   "), CODES)
+
+    @pytest.mark.parametrize("slug", ["шторм-х", "storm x", "storm_x", "-storm", "storm-", "storm--x", "a/b",
+                                      "storm.html", "x" * 61])
+    def test_invalid_or_cyrillic_slug_rejected(self, slug):
+        with pytest.raises(CatalogError, match="slug"):
+            normalize_model(raw_model(slug=slug), CODES)
+
+    @pytest.mark.parametrize("slug", ["a", "storm-x-2026", "x" * 60, "DX250-M"])
+    def test_valid_slugs(self, slug):
+        assert normalize_model(raw_model(slug=slug), CODES)["slug"] == slug.lower()
+
+    def test_name_longer_than_60_rejected(self):
+        with pytest.raises(CatalogError, match="60"):
+            normalize_model(raw_model(name="Я" * 61), CODES)
+
+    def test_name_of_60_after_strip_accepted(self):
+        assert normalize_model(raw_model(name=" " + "Я" * 60 + " "), CODES)["name"] == "Я" * 60
 
     def test_negative_variant_price(self):
         raw = raw_model(variants=[{"label": "A", "battery_ah": 100, "price_usd": "-5"}])
@@ -171,13 +186,49 @@ class TestNormalizeModel:
         assert result["published"] is False
         assert result["sort"] == 100
         assert result["specs"] == {}
-        assert result["options"] == {}
+        assert result["options"] is None, "нет опций во входе — опции модели не трогаем"
+        assert result["option_scope"] is None
+
+    @pytest.mark.parametrize("value", ["", None, "-", "нет", "None", "  "])
+    def test_empty_option_markers_skipped(self, value):
+        assert normalize_model(raw_model(options={"abs": value, "usb": "да"}), CODES)["options"] == {"usb": "included"}
+
+    def test_options_none_stays_none(self):
+        assert normalize_model(raw_model(options=None), CODES)["options"] is None
+
+    def test_option_scope_normalised_to_tuple(self):
+        result = normalize_model(raw_model(option_scope=["abs", "usb"]), CODES)
+        assert result["option_scope"] == ("abs", "usb")
+
+    def test_duplicate_variant_labels_rejected(self):
+        raw = raw_model(variants=[{"label": "A", "battery_ah": 1}, {"label": " A ", "battery_ah": 2},
+                                  {"label": "B", "battery_ah": 3}])
+        with pytest.raises(CatalogError, match="повторяются названия вариантов: A"):
+            normalize_model(raw, CODES)
+
+    def test_variant_label_over_80_rejected(self):
+        with pytest.raises(CatalogError, match="80"):
+            normalize_model(raw_model(variants=[{"label": "x" * 81, "battery_ah": 1}]), CODES)
+
+    def test_variant_label_of_80_ok(self):
+        assert normalize_model(raw_model(variants=[{"label": "x" * 80, "battery_ah": 1}]), CODES)
+
+    @pytest.mark.parametrize("override, field", [
+        ({"line": "L" * 21}, "line"), ({"short": "s" * 201}, "short"),
+        ({"specs": {"brakes": "b" * 121}}, "brakes"), ({"specs": {"tyre_front": "t" * 41}}, "tyre_front"),
+        ({"specs": {"motor_layout": "m" * 61}}, "motor_layout"), ({"specs": {"tyre_kind": "k" * 41}}, "tyre_kind"),
+    ])
+    def test_too_long_text_rejected(self, override, field):
+        with pytest.raises(CatalogError, match=f"слишком длинные значения: .*{field}"):
+            normalize_model(raw_model(**override), CODES)
+
+    def test_text_at_limits_accepted(self):
+        raw = raw_model(line="L" * 20, short="s" * 200, specs={"brakes": "b" * 120, "tyre_rear": "r" * 60})
+        assert normalize_model(raw, CODES)["short"] == "s" * 200
 
     def test_empty_spec_values_skipped(self):
         assert normalize_model(raw_model(specs={"brakes": "", "voltage_v": None}), CODES)["specs"] == {}
 
-    @pytest.mark.xfail(reason="BUG: catalog_io.py:108 empty option value is normalised to the string 'None'; "
-                              "apply() then crashes at catalog_io.py:225 Decimal('None')", strict=True)
     @pytest.mark.django_db
     def test_empty_option_value_is_rejected_or_skipped(self):
         make_option_def(code="abs")
@@ -240,15 +291,77 @@ class TestCompare:
 
         assert [c.status for c in report.changes] == ["unchanged", "new"]
 
-    @pytest.mark.xfail(reason="BUG: catalog_io.py:162,176 compare() only looks at variant label+price; a changed "
-                              "battery_ah/variant spec is reported 'unchanged' although apply() overwrites it",
-                       strict=True)
     def test_variant_battery_change_is_reported(self):
         self._seed()
         raw = raw_model()
         raw["variants"] = [{**raw["variants"][0], "battery_ah": 120}, raw["variants"][1]]
 
+        change = compare([normalize_model(raw, CODES)]).changes[0]
+        assert change.status == "changed"
+        assert "варианты/цены изменены" in change.changes
+
+    @pytest.mark.parametrize("override", [{"motor_power_w": 9000}, {"drive": "belt"}, {"brakes": "Барабан"},
+                                          {"voltage_v": 96}, {"tyre_rear": "150/70-17"}])
+    def test_variant_override_change_is_reported(self, override):
+        self._seed()
+        raw = raw_model()
+        raw["variants"] = [{**raw["variants"][0], **override}, raw["variants"][1]]
+
         assert compare([normalize_model(raw, CODES)]).changes[0].status == "changed"
+
+    def test_removed_variant_override_is_reported(self):
+        self._seed()
+        raw = raw_model()
+        second = {k: v for k, v in raw["variants"][1].items() if k != "motor_power_w"}
+        raw["variants"] = [raw["variants"][0], second]
+
+        assert compare([normalize_model(raw, CODES)]).changes[0].status == "changed"
+
+    @pytest.mark.parametrize("field, value, marker", [
+        ("description", "Новый текст", "description изменено"),
+        ("features", ["ABS"], "features изменено"),
+        ("sort", 5, "sort: «10» → «5»"),
+        ("published", False, "публикация published: True → False"),
+        ("popular", True, "публикация popular: False → True"),
+        ("short", "Другое", "short: «Быстрый» → «Другое»"),
+        ("line", "M", "line: «MX» → «M»"),
+        ("type", "naked", "type: «sport» → «naked»"),
+    ])
+    def test_model_field_changes_reported(self, field, value, marker):
+        self._seed()
+
+        change = compare([normalize_model(raw_model(**{field: value}), CODES)]).changes[0]
+
+        assert change.status == "changed"
+        assert marker in change.changes
+
+    def test_publication_diffs_ignored_when_not_updating_publication(self):
+        self._seed()
+        model = normalize_model(raw_model(published=False, popular=True), CODES)
+
+        assert compare([model]).changes[0].status == "changed"
+        assert compare([model], update_publication=False).changes[0].status == "unchanged"
+
+    def test_options_none_not_compared(self):
+        self._seed()
+        assert compare([normalize_model(raw_model(options=None), CODES)]).changes[0].status == "unchanged"
+
+    def test_options_compared_only_within_scope(self):
+        self._seed()  # в БД: abs=150, usb=включено
+        only_abs = normalize_model(raw_model(options={"abs": "150"}, option_scope=["abs"]), CODES)
+        changed_abs = normalize_model(raw_model(options={"abs": "99"}, option_scope=["abs"]), CODES)
+        dropped_usb = normalize_model(raw_model(options={"abs": "150"}, option_scope=["abs", "usb"]), CODES)
+
+        assert compare([only_abs]).changes[0].status == "unchanged"
+        assert "опции изменены" in compare([changed_abs]).changes[0].changes
+        assert "опции изменены" in compare([dropped_usb]).changes[0].changes
+
+    def test_reordered_variants_unchanged(self):
+        self._seed()
+        raw = raw_model()
+        raw["variants"] = list(reversed(raw["variants"]))
+
+        assert compare([normalize_model(raw, CODES)]).changes[0].status == "unchanged"
 
 
 @pytest.mark.django_db
@@ -258,7 +371,7 @@ class TestApply:
         make_option_def(code="usb")
         red, black = make_color(code="red"), make_color(code="black")
 
-        count = apply([normalize_model(raw_model(), CODES)])
+        count = apply([normalize_model(raw_model(colors="all"), CODES)])
 
         assert count == 1
         moto = Motorcycle.objects.get(slug="storm-x")
@@ -310,6 +423,49 @@ class TestApply:
         apply([normalized])
 
         assert list(Motorcycle.objects.get(slug="storm-x").colors.all()) == [red]
+
+    def test_colors_none_leaves_owner_choice_untouched(self):
+        make_option_def(code="abs")
+        make_option_def(code="usb")
+        red = make_color(code="red")
+        make_color(code="black")
+        moto = make_motorcycle(slug="storm-x")
+        moto.colors.set([red])
+
+        apply([normalize_model(raw_model(), CODES)])  # colors=None — колонки цветов нет
+
+        assert list(moto.colors.all()) == [red]
+
+    def test_options_none_leaves_model_options_untouched(self):
+        moto = make_motorcycle(slug="storm-x")
+        make_motorcycle_option(moto, make_option_def(code="alarm"), price_usd=Decimal("10"))
+
+        apply([normalize_model(raw_model(options=None), CODES)])
+
+        assert list(moto.options.values_list("option__code", flat=True)) == ["alarm"]
+
+    def test_option_scope_limits_deletion(self):
+        moto = make_motorcycle(slug="storm-x")
+        _abs, usb, alarm = make_option_def(code="abs"), make_option_def(code="usb"), make_option_def(code="alarm")
+        make_motorcycle_option(moto, usb, status="included", price_usd=None)
+        make_motorcycle_option(moto, alarm, price_usd=Decimal("10"))
+        # в файле есть колонки abs и usb: usb пустая → удаляется, alarm вне файла → остаётся
+        normalized = normalize_model(raw_model(options={"abs": "5", "usb": ""}, option_scope=["abs", "usb"]), CODES)
+
+        apply([normalized])
+
+        assert dict(moto.options.values_list("option__code", "price_usd")) == {"abs": Decimal("5.00"),
+                                                                                 "alarm": Decimal("10.00")}
+
+    def test_colors_empty_list_clears(self):
+        make_option_def(code="abs")
+        make_option_def(code="usb")
+        moto = make_motorcycle(slug="storm-x")
+        moto.colors.set([make_color(code="red")])
+
+        apply([normalize_model(raw_model(colors=[]), CODES)])
+
+        assert moto.colors.count() == 0
 
     def test_update_publication_false_keeps_flags(self):
         moto = make_motorcycle(slug="storm-x", is_published=False, is_popular=True)

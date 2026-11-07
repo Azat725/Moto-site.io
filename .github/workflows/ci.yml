@@ -29,6 +29,8 @@ jobs:
       - name: Production settings check
         env:
           DJANGO_SECRET_KEY: ci-only-secret-key-0123456789-abcdefghijklmnopqrstuvwxyz
-          IP_HASH_SALT: ci-only-salt-0123456789
+          IP_HASH_SALT: ci-only-salt-0123456789-abcdefghijklmnopqrstuvwxyz
+          ADMIN_PATH: ci-panel-for-checks/
           DJANGO_ALLOWED_HOSTS: example.com
+          DJANGO_CSRF_TRUSTED_ORIGINS: https://example.com
         run: python manage.py check --deploy --fail-level WARNING --settings=config.settings.prod

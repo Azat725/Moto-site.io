@@ -129,27 +129,40 @@ class TestParseCbrJson:
         with pytest.raises(RateParseError, match="большой"):
             parse_cbr_json(b" " * (MAX_RESPONSE_BYTES + 1))
 
-    @pytest.mark.xfail(
-        reason="BUG: parsers.py:66 item.get() on non-dict currency entry raises AttributeError, not RateParseError",
-        strict=True, raises=AttributeError,
-    )
     def test_non_object_currency_entry_raises_parse_error(self):
         payload = b'{"Date": "2026-11-07T11:30:00+03:00", "Valute": {"USD": 81.12}}'
         with pytest.raises(RateParseError):
             parse_cbr_json(payload)
 
-    @pytest.mark.xfail(reason="BUG: parsers.py:25-29 _decimal accepts NaN, so a NaN rate is returned as valid",
-                       strict=True)
     def test_nan_value_rejected(self):
         payload = b'{"Date": "2026-11-07T11:30:00+03:00", "Valute": {"USD": {"Nominal": 1, "Value": NaN}}}'
         with pytest.raises(RateParseError):
             parse_cbr_json(payload)
 
-    @pytest.mark.xfail(
-        reason="BUG: parsers.py:70 Infinity value makes quantize() raise decimal.InvalidOperation (uncaught)",
-        strict=True, raises=ArithmeticError,
-    )
     def test_infinite_value_rejected(self):
         payload = b'{"Date": "2026-11-07T11:30:00+03:00", "Valute": {"USD": {"Nominal": 1, "Value": Infinity}}}'
         with pytest.raises(RateParseError):
             parse_cbr_json(payload)
+
+
+class TestNonFiniteXml:
+    @pytest.mark.parametrize("value", ["NaN", "Infinity", "-Infinity", "sNaN"])
+    def test_non_finite_xml_value_rejected(self, value):
+        with pytest.raises(RateParseError, match="число"):
+            parse_cbr_xml(cbr_xml(usd_value=value))
+
+    def test_non_finite_nominal_rejected(self):
+        with pytest.raises(RateParseError):
+            parse_cbr_xml(cbr_xml(usd_nominal="Infinity"))
+
+
+class TestDefusedXml:
+    def test_dtd_hidden_from_byte_scan_still_rejected(self):
+        """UTF-16 прячет «<!DOCTYPE» от поиска по байтам — defusedxml (forbid_dtd) всё равно отклоняет."""
+        text = ('<?xml version="1.0" encoding="UTF-16"?><!DOCTYPE x [<!ENTITY a "b">]>'
+                '<ValCurs Date="07.11.2026"><Valute><CharCode>USD</CharCode><Value>&a;</Value></Valute></ValCurs>')
+        payload = text.encode("utf-16")
+        assert b"<!DOCTYPE" not in payload.upper()
+
+        with pytest.raises(RateParseError):
+            parse_cbr_xml(payload)

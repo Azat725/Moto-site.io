@@ -8,6 +8,8 @@ from django.utils.html import format_html
 
 from . import pricing
 from .admin_import import CatalogImportView, export_catalog_xlsx
+from .admin_forms import SiteSettingsForm
+from .admin_permissions import DUPLICATE_PERMISSIONS, EXPORT_PERMISSIONS, IMPORT_PERMISSIONS
 from .models import Color, Motorcycle, MotorcycleOption, OptionDef, Photo, SiteSettings, Variant
 from .services import current_context
 
@@ -19,11 +21,11 @@ def _rub(value: int | None) -> str:
     return "по запросу" if value is None else f"{value:,}".replace(",", " ") + " ₽"
 
 
-class VariantInline(admin.TabularInline):
+class VariantInline(admin.StackedInline):
     model = Variant
     extra = 0
-    fields = ("label", "battery_ah", "voltage_v", "motor_power_w", "drive", "top_speed_kmh", "range_max_km",
-              "brakes", "tyre_rear", "price_usd", "price_rub", "sort_order")
+    fields = ("label", ("battery_ah", "price_usd", "price_rub"), ("voltage_v", "motor_power_w"),
+              ("drive", "sort_order"), ("top_speed_kmh", "range_max_km"), ("brakes", "tyre_rear"))
     readonly_fields = ("price_rub",)
 
     @admin.display(description="Цена на сайте")
@@ -35,7 +37,7 @@ class VariantInline(admin.TabularInline):
         return _rub(None if kop is None else pricing.ceil_to_step(kop, ctx.step))
 
 
-class OptionInline(admin.TabularInline):
+class OptionInline(admin.StackedInline):
     model = MotorcycleOption
     extra = 0
     fields = ("option", "status", "price_usd")
@@ -50,7 +52,7 @@ class PhotoInline(admin.TabularInline):
 
     @admin.display(description="Превью")
     def preview(self, obj):
-        return format_html('<img src="{}" style="height:60px">', obj.image.url) if obj.pk and obj.image else "—"
+        return format_html('<img src="{}" alt="{}" style="height:60px">', obj.image.url, obj.alt) if obj.pk and obj.image else "—"
 
 
 @admin.register(Motorcycle)
@@ -64,6 +66,8 @@ class MotorcycleAdmin(admin.ModelAdmin):
     filter_horizontal = ("colors",)
     inlines = [VariantInline, OptionInline, PhotoInline]
     actions = ["publish", "unpublish", "duplicate"]
+    list_per_page = 25
+    ordering = ("sort_order", "name", "pk")
     fieldsets = (
         ("Основное", {"fields": ("name", "slug", "line", "type", "is_published", "is_popular", "sort_order",
                                  "short", "description", "features", "colors")}),
@@ -75,17 +79,17 @@ class MotorcycleAdmin(admin.ModelAdmin):
     )
 
     def get_urls(self):
-        def guarded(view):
+        def guarded(view, permissions):
             def wrapper(request, *args, **kwargs):
-                if not request.user.has_perm("catalog.change_motorcycle"):
+                if not request.user.has_perms(permissions):
                     raise PermissionDenied
                 return view(request, *args, **kwargs)
             return self.admin_site.admin_view(wrapper)
 
         custom = [
-            path("import/", guarded(CatalogImportView.as_view(admin_site=self.admin_site)),
+            path("import/", guarded(CatalogImportView.as_view(admin_site=self.admin_site), IMPORT_PERMISSIONS),
                  name="catalog_motorcycle_import"),
-            path("export.xlsx", guarded(export_catalog_xlsx), name="catalog_motorcycle_export"),
+            path("export.xlsx", guarded(export_catalog_xlsx, EXPORT_PERMISSIONS), name="catalog_motorcycle_export"),
         ]
         return custom + super().get_urls()
 
@@ -95,7 +99,9 @@ class MotorcycleAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         token = PRICE_CTX.set(current_context())  # один расчёт курса на страницу списка
         try:
-            return super().changelist_view(request, extra_context)
+            context = {"can_import": request.user.has_perms(IMPORT_PERMISSIONS),
+                       "can_export": request.user.has_perms(EXPORT_PERMISSIONS)}
+            return super().changelist_view(request, context | (extra_context or {}))
         finally:
             PRICE_CTX.reset(token)
 
@@ -118,7 +124,10 @@ class MotorcycleAdmin(admin.ModelAdmin):
     def unpublish(self, request, queryset):
         queryset.update(is_published=False)
 
-    @admin.action(description="Создать копию (неопубликованную)", permissions=["add"])
+    def has_duplicate_permission(self, request):
+        return request.user.has_perms(DUPLICATE_PERMISSIONS)
+
+    @admin.action(description="Создать копию (неопубликованную)", permissions=["duplicate"])
     def duplicate(self, request, queryset):
         for moto in queryset:
             with transaction.atomic():
@@ -126,11 +135,16 @@ class MotorcycleAdmin(admin.ModelAdmin):
         self.message_user(request, "Копии созданы — отредактируйте название и адрес.", messages.SUCCESS)
 
 
+@transaction.atomic
 def copy_motorcycle(moto: Motorcycle) -> Motorcycle:
     variants, options, colors = list(moto.variants.all()), list(moto.options.all()), list(moto.colors.all())
     clone = Motorcycle.objects.get(pk=moto.pk)
     clone.pk = None
-    clone.slug = f"{moto.slug}-copy"[:60]
+    suffix, number = "-copy", 1
+    while Motorcycle.objects.filter(slug=moto.slug[:60 - len(suffix)].rstrip("-") + suffix).exists():
+        number += 1
+        suffix = f"-copy-{number}"
+    clone.slug = moto.slug[:60 - len(suffix)].rstrip("-") + suffix
     clone.name = f"{moto.name} (копия)"[:60]
     clone.is_published = False
     clone.save()
@@ -150,11 +164,16 @@ def _fields(obj) -> dict:
 class OptionDefAdmin(admin.ModelAdmin):
     list_display = ("name", "code", "sort_order")
     search_fields = ("name", "code")
+    ordering = ("sort_order", "name", "pk")
+    list_per_page = 50
 
 
 @admin.register(Color)
 class ColorAdmin(admin.ModelAdmin):
     list_display = ("name", "swatch", "code", "sort_order")
+    search_fields = ("name", "code")
+    ordering = ("sort_order", "name", "pk")
+    list_per_page = 50
 
     @admin.display(description="Цвет")
     def swatch(self, obj):
@@ -164,6 +183,7 @@ class ColorAdmin(admin.ModelAdmin):
 
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
+    form = SiteSettingsForm
     readonly_fields = ("current_rate_info",)
     fieldsets = (
         ("Цены", {"fields": ("markup_rub", "rounding_step", "rate_mode", "manual_rate", "current_rate_info")}),
@@ -181,7 +201,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         return f"{rate.value} ₽ за $ ({rate.source}, на {date}){stale}"
 
     def has_add_permission(self, request):
-        return not SiteSettings.objects.exists()
+        return super().has_add_permission(request) and not SiteSettings.objects.exists()
 
     def has_delete_permission(self, request, obj=None):
         return False

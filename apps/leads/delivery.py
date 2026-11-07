@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from django.conf import settings
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -11,6 +12,16 @@ from .models import Outbox
 from .notifiers import SENDERS, NotifyError
 
 LOCK_SECONDS = 120
+
+
+@transaction.atomic
+def requeue_notifications(queryset) -> int:
+    """Перепланировать только ожидающие и недоставленные; текущую отправку не прерывать."""
+    now = timezone.now()
+    waiting = queryset.filter(status=Outbox.Status.PENDING).update(next_attempt_at=now)
+    dead = queryset.filter(status=Outbox.Status.DEAD).update(
+        status=Outbox.Status.PENDING, next_attempt_at=now, attempts=0, locked_until=None)
+    return dead + waiting
 
 
 def claim(item_id: int):

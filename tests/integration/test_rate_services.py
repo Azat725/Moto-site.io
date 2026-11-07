@@ -1,9 +1,11 @@
 """Получение курса (responses вместо сети), выбор текущего курса и команда update_rate."""
-from datetime import date, datetime, timezone as dt_timezone
+import io
+from datetime import date, datetime, timedelta, timezone as dt_timezone
 from decimal import Decimal
 
 import pytest
 import requests
+import responses as responses_lib
 from django.core.management import CommandError, call_command
 
 from apps.catalog.models import SiteSettings
@@ -38,6 +40,32 @@ class TestFetchFromSource:
     def test_json_source(self, rsps):
         _json_ok(rsps)
         assert fetch_from_source("cbr_json").value == Decimal("81.1200")
+
+    def test_oversize_stream_rejected_and_falls_back(self, rsps, clock):
+        from apps.rates.parsers import MAX_RESPONSE_BYTES
+
+        rsps.get(XML_URL, body=b"<" * (MAX_RESPONSE_BYTES + 1))
+        _json_ok(rsps)
+
+        with pytest.raises(RateParseError, match="большой"):
+            fetch_from_source("cbr_xml")
+        assert refresh_rate().rate.source == "cbr_json"
+
+    def test_broken_stream_wrapped_and_falls_back(self, rsps, clock):
+        from urllib3.exceptions import ProtocolError
+
+        class BrokenBody(io.BufferedReader):
+            def read(self, *args, **kwargs):
+                raise ProtocolError("Connection broken: IncompleteRead")
+
+        rsps.get(XML_URL, body=BrokenBody(io.BytesIO(b"x")), auto_calculate_content_length=False)
+        _json_ok(rsps)
+
+        with pytest.raises(requests.RequestException):
+            fetch_from_source("cbr_xml")
+        rsps.replace(responses_lib.GET, XML_URL, body=BrokenBody(io.BytesIO(b"x")))
+        result = refresh_rate()
+        assert result.ok is True and result.rate.source == "cbr_json"
 
     def test_unknown_source_raises(self):
         with pytest.raises(RateParseError, match="Неизвестный источник"):
@@ -141,6 +169,39 @@ class TestRefreshRate:
 
         assert refresh_rate().ok is False
 
+    def test_big_jump_confirmed_by_previous_rejected_fetch(self, rsps, clock):
+        make_rate("80.0000", effective_date=date(2026, 11, 5))
+        clock.set(clock.current + timedelta(hours=3))
+        rsps.get(XML_URL, body=cbr_xml(usd_value="100,0000"))
+        first = refresh_rate()
+        assert first.ok is False and first.rate.accepted is False
+
+        clock.set(clock.current + timedelta(hours=3))
+        rsps.replace(responses_lib.GET, XML_URL, body=cbr_xml(usd_value="100,5000"))  # в пределах 1 %
+        second = refresh_rate()
+
+        assert second.ok is True
+        assert last_accepted().value == Decimal("100.5000")
+
+    def test_big_jump_not_confirmed_when_previous_rejection_differs(self, rsps, clock):
+        make_rate("80.0000", effective_date=date(2026, 11, 5))
+        clock.set(clock.current + timedelta(hours=1))
+        make_rate("110.0000", effective_date=date(2026, 11, 6), accepted=False)
+        clock.set(clock.current + timedelta(hours=1))
+        _xml_ok(rsps, value="100,0000")  # отличается от отклонённого на 10 %
+
+        assert refresh_rate().ok is False
+
+    def test_big_jump_not_confirmed_when_last_fetch_was_accepted(self, rsps, clock):
+        make_rate("80.0000", effective_date=date(2026, 11, 5))
+        clock.set(clock.current + timedelta(hours=1))
+        _xml_ok(rsps, value="80,0000")
+        assert refresh_rate().ok is True  # последняя запись — принятая
+        clock.set(clock.current + timedelta(hours=1))
+        rsps.replace(responses_lib.GET, XML_URL, body=cbr_xml(usd_value="100,0000"))
+
+        assert refresh_rate().ok is False
+
     def test_jump_compared_with_last_accepted_not_last_rejected(self, rsps, clock):
         make_rate("80.0000", effective_date=date(2026, 11, 5))
         make_rate("200.0000", effective_date=date(2026, 11, 6), accepted=False)
@@ -148,10 +209,6 @@ class TestRefreshRate:
 
         assert refresh_rate().ok is True
 
-    @pytest.mark.xfail(
-        reason="BUG: services.py:58 NaN rate from source makes `MIN <= value` raise decimal.InvalidOperation; "
-               "refresh_rate crashes instead of rejecting/falling back", strict=True, raises=ArithmeticError,
-    )
     def test_nan_rate_from_source_does_not_crash(self, rsps, clock, settings):
         settings.RATES = {**settings.RATES, "SOURCES": ["cbr_json"]}
         rsps.get(JSON_URL, body=b'{"Date": "2026-11-07T11:30:00+03:00", "Valute": {"USD": {"Value": NaN}}}')
@@ -159,6 +216,20 @@ class TestRefreshRate:
         result = refresh_rate()
 
         assert result.ok is False
+        assert result.rate is None and Rate.objects.count() == 0
+
+    def test_nan_from_first_source_falls_back_to_second(self, rsps, clock):
+        rsps.get(XML_URL, body=cbr_xml(usd_value="NaN"))
+        _json_ok(rsps)
+
+        assert refresh_rate().rate.source == "cbr_json"
+
+    def test_malformed_mirror_entry_falls_back(self, rsps, clock, settings):
+        settings.RATES = {**settings.RATES, "SOURCES": ["cbr_json", "cbr_xml"]}
+        rsps.get(JSON_URL, body=b'{"Date": "2026-11-07T11:30:00+03:00", "Valute": {"USD": 81.12}}')
+        _xml_ok(rsps)
+
+        assert refresh_rate().rate.source == "cbr_xml"
 
 
 class TestCurrentRate:
@@ -171,7 +242,15 @@ class TestCurrentRate:
         assert rate.value == Decimal("95.5000")
         assert rate.source == "manual"
         assert rate.is_stale is False
-        assert rate.effective_date == date(2026, 11, 7)
+        assert rate.effective_date is None
+
+    def test_accepts_preloaded_site_settings(self, clock, django_assert_num_queries):
+        site = SiteSettings(rate_mode=SiteSettings.RateMode.MANUAL, manual_rate=Decimal("77.0000"))
+
+        with django_assert_num_queries(0):
+            rate = current_rate(site)
+
+        assert rate.value == Decimal("77.0000") and rate.source == "manual"
 
     def test_manual_mode_without_value_falls_back_to_auto(self, clock):
         make_rate("90.0000")

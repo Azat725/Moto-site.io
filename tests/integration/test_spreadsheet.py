@@ -75,15 +75,22 @@ class TestReadTableCsv:
         with pytest.raises(CatalogError, match="5 МБ"):
             read_table(b"x" * (spreadsheet.MAX_FILE_BYTES + 1))
 
-    @pytest.mark.xfail(reason="BUG: spreadsheet.py:46,58 rows beyond MAX_ROWS are silently dropped; apply() then "
-                              "deletes the variants that were cut off instead of the import being rejected",
-                       strict=True)
     def test_too_many_rows_rejected(self, monkeypatch):
         monkeypatch.setattr(spreadsheet, "MAX_ROWS", 2)
-        data = b"slug;name\n" + b"".join(b"m%d;M\n" % i for i in range(5))
+        data = b"slug;name\n" + b"".join(b"m%d;M\n" % i for i in range(3))
 
-        with pytest.raises(CatalogError):
+        with pytest.raises(CatalogError, match="больше 2 строк"):
             read_table(data)
+
+    def test_exactly_max_rows_accepted(self, monkeypatch):
+        monkeypatch.setattr(spreadsheet, "MAX_ROWS", 2)
+        data = b"slug;name\n" + b"".join(b"m%d;M\n" % i for i in range(2))
+        assert len(read_table(data)) == 2
+
+    def test_too_many_xlsx_rows_rejected(self, monkeypatch):
+        monkeypatch.setattr(spreadsheet, "MAX_ROWS", 2)
+        with pytest.raises(CatalogError):
+            read_table(_xlsx([["slug"], ["a"], ["b"], ["c"]]))
 
 
 class TestReadTableXlsx:
@@ -109,7 +116,8 @@ class TestRowsToModels:
         assert model["published"] is True and model["popular"] is False
         assert [v["label"] for v in model["variants"]] == ["5 kW", "8 kW"]
         assert model["options"] == {"abs": "150"}, "опции берутся из первой строки модели"
-        assert model["colors"] == "all"
+        assert model["option_scope"] == ["abs"]
+        assert model["colors"] is None, "в таблице нет колонки цветов"
 
     def test_variant_prefixed_columns_map_to_variant_fields(self):
         rows = [{"slug": "m1", "variant_label": "V", "variant_voltage_v": "60", "variant_drive": "ремень"}]
@@ -117,9 +125,20 @@ class TestRowsToModels:
         assert variant["voltage_v"] == "60" and variant["drive"] == "ремень"
 
     @pytest.mark.parametrize("value", [None, "", "-", "нет"])
-    def test_absent_option_markers_skipped(self, value):
-        rows = [{"slug": "m1", "variant_label": "V", "opt:abs": value}]
-        assert rows_to_models(rows)[0]["options"] == {}
+    def test_empty_option_cells_kept_for_scope_and_skipped_on_normalize(self, value):
+        rows = [{"slug": "m1", "name": "M1", "type": "sport", "variant_label": "V", "battery_ah": 1,
+                 "opt:abs": value}]
+
+        model = rows_to_models(rows)[0]
+
+        assert model["options"] == {"abs": value}
+        assert model["option_scope"] == ["abs"]
+        normalized = normalize_model(model, {"abs"})
+        assert normalized["options"] == {} and normalized["option_scope"] == ("abs",)
+
+    def test_no_option_columns_means_untouched(self):
+        model = rows_to_models([{"slug": "m1", "variant_label": "V"}])[0]
+        assert model["options"] is None and model["option_scope"] is None
 
     @pytest.mark.parametrize("word", ["1", "да", "Yes", "TRUE", "+", "y"])
     def test_true_words(self, word):
@@ -155,9 +174,9 @@ class TestBuildWorkbook:
 
         sheet = load_workbook(io.BytesIO(data))["Каталог"]
         values = [c.value for c in sheet[2]]
-        assert "'=HYPERLINK(\"http://evil\")" in values
-        assert "'@cmd" in values
-        assert "'+V" in values
+        assert "=HYPERLINK(\"http://evil\")" in values
+        assert "@cmd" in values
+        assert "+V" in values
         assert all(c.data_type != "f" for c in sheet[2])
 
 
@@ -211,8 +230,18 @@ class TestRoundTrip:
 
         assert all(c.status == "unchanged" for c in compare(self._reimport(options)).changes)
 
-    @pytest.mark.xfail(reason="BUG: spreadsheet.py:131 _cell prefixes text starting with =,+,@ with an apostrophe "
-                              "that read_table never strips, so export→import mutates such text", strict=True)
+    def test_round_trip_keeps_options_outside_file_columns(self):
+        self._seed()
+        data = build_workbook(export_models(), [("abs", "ABS")])  # колонки usb в файле нет
+        models = [normalize_model(r, {"abs", "usb"}) for r in rows_to_models(read_table(data))]
+
+        apply(models)
+
+        from apps.catalog.models import Motorcycle
+
+        storm = Motorcycle.objects.get(slug="storm-x")
+        assert set(storm.options.values_list("option__code", flat=True)) == {"abs", "usb"}
+
     def test_round_trip_text_starting_with_plus(self):
         options = self._seed()
         from apps.catalog.models import Motorcycle

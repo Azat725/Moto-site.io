@@ -64,6 +64,8 @@ def parse_cbr_json(payload: bytes, currency: str = "USD") -> ParsedRate:
     try:
         data = json.loads(payload.decode("utf-8"))
         item = data["Valute"][currency]
+        if not isinstance(item, dict):
+            raise TypeError("Запись валюты должна быть объектом")
         effective = datetime.fromisoformat(data["Date"]).date()
     except (ValueError, KeyError, TypeError, UnicodeDecodeError) as exc:
         raise RateParseError("Некорректный JSON курса") from exc

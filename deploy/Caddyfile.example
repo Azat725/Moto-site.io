@@ -21,8 +21,10 @@ ivax-moto.ru, www.ivax-moto.ru {
         root * /srv/ivax/media
         file_server
     }
-    reverse_proxy 127.0.0.1:8000 {
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-Proto {scheme}
+    handle {
+        reverse_proxy 127.0.0.1:8000 {
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
     }
 }
