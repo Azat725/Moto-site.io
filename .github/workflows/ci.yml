@@ -37,3 +37,15 @@ jobs:
         run: |
           mkdir -p "$DATA_DIR"
           python manage.py check --deploy --fail-level WARNING --settings=config.settings.prod
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Docker build, startup and update with persistent data
+        run: python scripts/docker_smoke.py

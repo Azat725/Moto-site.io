@@ -1,0 +1,28 @@
+{$CADDY_SITE_ADDRESSES} {
+    encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
+    @admin path /{$CADDY_ADMIN_PATH}/*
+    request_body @admin {
+        max_size 12MB
+    }
+    @public not path /{$CADDY_ADMIN_PATH}/*
+    request_body @public {
+        max_size 64KB
+    }
+    handle_path /media/* {
+        header Content-Security-Policy "default-src 'none'; img-src 'self'"
+        root * /srv/ivax/media
+        file_server
+    }
+    handle {
+        reverse_proxy web:8000 {
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+}

@@ -1,0 +1,22 @@
+# Разрешён только код приложения; локальная база, секреты и файлы владельца не отправляются в build context.
+**
+!Dockerfile
+!requirements.txt
+!manage.py
+!config/
+!config/**
+!apps/
+!apps/**
+!templates/
+!templates/**
+!static/
+!static/**
+!deploy/
+!deploy/docker/
+!deploy/docker/**
+**/__pycache__
+**/*.pyc
+**/*.sqlite3*
+**/.env*
+**/*.pdf
+**/*.log
