@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% load site_tags %}
+{% block title %}Отзывы покупателей электромотоциклов{% endblock %}
+{% block description %}Отзывы покупателей электромотоциклов IV&AX MOTO. Поделитесь впечатлениями о модели и покупке — отзывы публикуются после проверки.{% endblock %}
+{% block page_key %}reviews{% endblock %}
+{% block content %}
+<section class="page-hero page-hero--compact">
+  <div class="container">
+    {% include "partials/breadcrumbs.html" with current="Отзывы" %}
+    <h1>Отзывы <span class="accent">покупателей</span></h1>
+    <p class="lead">Мы публикуем отзывы после проверки модератором — без правок по смыслу.</p>
+  </div>
+</section>
+{% if reviews %}{% include "partials/reviews_block.html" %}{% else %}
+<section class="section"><div class="container"><p class="empty is-on"><b>Отзывов пока нет</b>Станьте первым — расскажите о своей покупке.</p></div></section>
+{% endif %}
+<section class="section" id="leave-review">
+  <div class="container">
+    <div class="lead-box" data-reveal>
+      <h2>Оставить отзыв</h2>
+      <form class="form" data-review-form method="post" action="{% url 'reviews:submit' %}" novalidate>
+        {% if site_mode == "live" %}{% csrf_token %}{% endif %}
+        {% if request.GET.sent %}<div class="form-status is-ok">Спасибо! Отзыв появится после проверки.</div>{% endif %}
+        <div class="form__row">
+          <div class="field"><label for="r-name">Имя</label><input id="r-name" name="display_name" required maxlength="40" autocomplete="given-name"><span class="field__error">Укажите имя</span></div>
+          <div class="field"><label for="r-city">Город (необязательно)</label><input id="r-city" name="city" maxlength="40" autocomplete="address-level2"></div>
+        </div>
+        <div class="form__row">
+          <div class="field"><label for="r-rating">Оценка</label><select id="r-rating" name="rating" required><option value="5">5 — отлично</option><option value="4">4 — хорошо</option><option value="3">3 — нормально</option><option value="2">2 — плохо</option><option value="1">1 — очень плохо</option></select></div>
+          <div class="field"><label for="r-model">Модель (необязательно)</label><select id="r-model" name="model"><option value="">—</option>{% for m in models %}<option value="{{ m.slug }}">{{ m.name }}</option>{% endfor %}</select></div>
+        </div>
+        <div class="field"><label for="r-text">Отзыв</label><textarea id="r-text" name="text" required minlength="20" maxlength="1000" placeholder="Расскажите о модели, комплектации и покупке"></textarea><span class="field__error">Не короче 20 символов</span></div>
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label class="check"><input type="checkbox" name="consent" value="1" required><span class="box" aria-hidden="true"></span><span>Я даю <a href="{% url 'pages:consent' %}" target="_blank" rel="noopener">согласие на обработку персональных данных</a>.</span></label>
+        <label class="check"><input type="checkbox" name="publication_consent" value="1" required><span class="box" aria-hidden="true"></span><span>Я даю <a href="{% url 'pages:consent_publication' %}" target="_blank" rel="noopener">согласие на публикацию</a> моего имени и города вместе с отзывом.</span></label>
+        <button class="btn btn--block" type="submit">Отправить отзыв {% icon "arrow" "arrow" %}</button>
+        <div class="form-status" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

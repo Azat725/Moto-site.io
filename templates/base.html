@@ -1,0 +1,50 @@
+{% load static site_tags %}<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b0c">
+  <meta name="format-detection" content="telephone=no">
+  <title>{% block title %}{% endblock %} | {{ brand }}</title>
+  <meta name="description" content="{% block description %}{% endblock %}">
+  {% if site_noindex or noindex %}<meta name="robots" content="noindex, nofollow">{% else %}<meta name="robots" content="index, follow, max-image-preview:large">{% endif %}
+  <link rel="canonical" href="{% block canonical %}{% abs_url %}{% endblock %}">
+  <meta property="og:site_name" content="{{ brand }}">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{{ brand }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Электромотоциклы в {{ city_in }}: каталог, конфигуратор и цены по курсу ЦБ РФ.{% endblock %}">
+  <meta property="og:url" content="{% abs_url %}">
+  <meta property="og:image" content="{{ site_domain }}{% static 'assets/og-image.png' %}">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="{% static 'assets/favicon.svg' %}" type="image/svg+xml">
+  <script nonce="{{ csp_nonce }}">(function(d,w){var c=d.documentElement.classList;c.add('js');try{if(sessionStorage.getItem('ivax_seen'))c.add('no-preloader')}catch(e){}if(w.matchMedia&&w.matchMedia('(prefers-reduced-motion: reduce)').matches)c.add('reduce');if((navigator.hardwareConcurrency||8)<=4||(navigator.connection&&navigator.connection.saveData))c.add('is-lite')})(document,window)</script>
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/animations.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages.css' %}">
+  <link rel="stylesheet" href="{% static 'css/shop.css' %}">
+  {% for item in jsonld %}{% json_script_ld item %}{% endfor %}
+  <script src="{% static 'js/config.js' %}" defer></script>
+  <script src="{% static 'js/cookie.js' %}" defer></script>
+  <script src="{% static 'js/main.js' %}" defer></script>
+  <script src="{% static 'js/animations.js' %}" defer></script>
+  <script src="{% static 'js/forms.js' %}" defer></script>
+  {% block scripts %}{% endblock %}
+</head>
+<body data-page="{% block page_key %}{% endblock %}" data-mode="{{ site_mode }}" data-lead-url="{% url 'leads:create' %}" data-review-url="{% url 'reviews:submit' %}">
+  {% block preloader %}{% include "partials/preloader.html" %}{% endblock %}
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+  <a class="skip-link" href="#main">Перейти к содержимому</a>
+  {% if site_mode == "demo" %}<div class="demo-ribbon" role="note">Демо-версия для согласования: формы не отправляются, отзывы — образцы.</div>{% endif %}
+  {% include "partials/header.html" %}
+  <main id="main" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+  {% include "partials/footer.html" %}
+  {% include "partials/cookie.html" %}
+</body>
+</html>

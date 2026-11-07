@@ -1,0 +1,66 @@
+{% extends "base.html" %}{% load static site_tags %}
+{% block title %}Купить электромотоцикл в Нижнекамске — каталог и цены{% endblock %}
+{% block description %}Электромотоциклы в Нижнекамске: спорт, нейкеды и туринг от 5 до 15 кВт. Соберите комплектацию в конфигураторе — цена в рублях по курсу ЦБ РФ.{% endblock %}
+{% block og_title %}Электромотоциклы IV&AX MOTO — каталог и конфигуратор{% endblock %}
+{% block page_key %}home{% endblock %}
+{% block preloader %}{% endblock %}
+{% block scripts %}<script src="{% static 'js/catalog.js' %}" defer></script>{% endblock %}
+{% block content %}
+<section class="shop-hero" aria-labelledby="hero-title">
+  <div class="speed-lines" data-speed-lines aria-hidden="true"></div>
+  <div class="container shop-hero__in">
+    <div>
+      <p class="hero__tag" data-reveal><i></i><span>Электромотоциклы · {{ city }}</span></p>
+      <h1 id="hero-title" class="shop-hero__title split" data-split>Электромотоциклы <span class="accent">в&nbsp;Нижнекамске</span></h1>
+    </div>
+    <ul class="shop-hero__facts" data-reveal>
+      <li>{% icon "bolt" %} <b>5–15 кВт</b> мощность</li>
+      <li>{% icon "speed" %} <b>до 170 км/ч</b></li>
+      <li>{% icon "route" %} <b>до 300 км</b> на заряде</li>
+      <li>{% icon "sliders" %} <b>Конфигуратор</b> комплектации</li>
+    </ul>
+  </div>
+</section>
+
+<section class="section section--catalog" id="catalog" aria-label="Каталог электромотоциклов">
+  <div class="container">
+    {% include "partials/catalog_grid.html" %}
+  </div>
+</section>
+
+<div class="marquee" aria-hidden="true">
+  <div class="marquee__track">
+    {% for _ in "12" %}<div class="marquee__group"><span>Электромотоциклы</span><span class="dot"></span><span>Конфигуратор</span><span class="dot"></span><span>5–15 кВт</span><span class="dot"></span><span>До 300 км</span><span class="dot"></span><span>Любой цвет</span><span class="dot"></span><span>Нижнекамск</span><span class="dot"></span><span>Электромотоциклы</span><span class="dot"></span><span>Конфигуратор</span><span class="dot"></span><span>5–15 кВт</span><span class="dot"></span><span>До 300 км</span><span class="dot"></span><span>Любой цвет</span><span class="dot"></span><span>Нижнекамск</span><span class="dot"></span></div>{% endfor %}
+  </div>
+</div>
+
+<section class="section section--light" aria-labelledby="steps-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Как заказать</span>
+      <h2 id="steps-title" class="split" data-split>От конфигурации до <span class="accent">ключей</span></h2>
+    </div>
+    <ol class="steps" data-stagger>
+      {% for title, text in steps %}<li data-reveal><h3>{{ title }}</h3><p>{{ text }}</p></li>{% endfor %}
+    </ol>
+  </div>
+</section>
+
+{% include "partials/reviews_block.html" %}
+{% include "partials/faq.html" %}
+
+<section class="section section--alt section--dark-alt" id="callback" aria-labelledby="callback-title">
+  <div class="container">
+    <div class="cta-band" data-reveal="zoom">
+      <div>
+        <h2 id="callback-title">Остались вопросы? Мы перезвоним</h2>
+        <p>Оставьте имя и телефон — менеджер свяжется с вами в рабочее время и поможет подобрать электромотоцикл.</p>
+      </div>
+      <a class="btn" href="tel:{{ site.phone_raw }}" data-magnetic>{% icon "phone" %} {{ site.phone }}</a>
+    </div>
+    <div class="lead-box" data-reveal>
+      {% include "partials/lead_form.html" with kind="callback" btn="Перезвоните мне" %}
+    </div>
+  </div>
+</section>
+{% endblock %}

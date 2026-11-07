@@ -1,0 +1,33 @@
+{% load site_tags %}{% with moto=c.moto offer=c.offer %}
+<div class="bike-item" data-reveal data-type="{{ moto.type }}" data-line="{{ moto.line }}" data-power="{{ c.powers_kw }}"
+     data-cooling="{{ moto.cooling }}" data-price="{{ offer.min_price_rub|default_if_none:'' }}" data-range="{{ c.max_range }}"
+     data-speed="{{ c.max_speed }}" data-name="{{ moto.name|lower }} {{ moto.get_type_display|lower }}">
+  <article class="bike-card tilt">
+    <div class="bike-card__art bike-card__art--photo">
+      <div class="bike-card__badges">
+        <span class="badge">{{ c.power_label }}</span>
+        {% if moto.cooling == "liquid" %}<span class="badge badge--white">Жидкостное охлаждение</span>{% elif moto.is_popular %}<span class="badge badge--white">Популярная</span>{% endif %}
+      </div>
+      {% if c.photo %}
+        <img src="{{ c.photo.image.url }}" alt="{{ c.photo.alt }}" width="{{ c.photo.width }}" height="{{ c.photo.height }}"
+             {% if forloop.counter <= 3 %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">
+      {% endif %}
+    </div>
+    <div class="bike-card__body">
+      <div>
+        <p class="bike-card__brand">{{ moto.get_type_display }}{% if moto.line %} · линейка {{ moto.line }}{% endif %}</p>
+        <h3 class="bike-card__title"><a href="{{ moto.get_absolute_url }}">{{ moto.name }}</a></h3>
+      </div>
+      <ul class="specs">
+        <li><span>Мощность</span><b>{{ c.power_label }}</b></li>
+        <li><span>Скорость</span><b>до {{ c.max_speed }} км/ч</b></li>
+        <li><span>Запас хода</span><b>до {{ c.max_range }} км</b></li>
+        <li><span>Батарея</span><b>{{ c.battery_label }}</b></li>
+      </ul>
+      <div class="bike-card__foot">
+        <div class="price"><small>{% if offer.min_price_rub %}Цена от{% else %}Цена{% endif %}</small><b>{{ offer.min_price_rub|rub }}</b></div>
+        <span class="more-link">Собрать {% icon "arrow" %}</span>
+      </div>
+    </div>
+  </article>
+</div>{% endwith %}

@@ -1,0 +1,22 @@
+{% load site_tags %}{% if reviews %}
+<section class="section section--alt section--dark-alt" aria-labelledby="reviews-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Отзывы</span>
+      <h2 id="reviews-title">Что говорят покупатели</h2>
+      {% if reviews_are_samples %}<p class="lead sample-note">Это образец оформления блока. Настоящие отзывы появятся после первых покупок — их публикуют только после проверки.</p>{% endif %}
+    </div>
+    <div class="grid grid--3 reviews-grid" data-stagger>
+      {% for r in reviews %}
+      <figure class="review-card" data-reveal{% if reviews_are_samples %} data-sample{% endif %}>
+        {% if reviews_are_samples %}<span class="badge badge--outline review-card__sample">Пример отзыва</span>{% endif %}
+        <div class="stars" aria-label="Оценка {{ r.rating }} из 5">{% for i in "12345" %}<span class="star{% if forloop.counter <= r.rating %} is-on{% endif %}" aria-hidden="true">★</span>{% endfor %}</div>
+        <blockquote>{{ r.text }}</blockquote>
+        <figcaption><b>{{ r.display_name }}</b>{% if r.city %}, {{ r.city }}{% endif %}{% if r.motorcycle %} · {{ r.motorcycle.name }}{% endif %}</figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    <p class="section-cta" data-reveal><a class="btn btn--ghost" href="{% url 'pages:reviews' %}">Все отзывы и оставить свой {% icon "arrow" %}</a></p>
+  </div>
+</section>
+{% endif %}

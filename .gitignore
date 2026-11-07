@@ -17,3 +17,20 @@ npm-debug.log*
 
 # Claude Code local state
 .claude/
+
+# Django / Python
+.venv/
+__pycache__/
+*.pyc
+/data/
+*.sqlite3
+*.sqlite3-*
+/media/
+/staticfiles/
+/_site/
+/_private/
+*.pdf
+.coverage
+htmlcov/
+/test-results/
+/playwright-report/

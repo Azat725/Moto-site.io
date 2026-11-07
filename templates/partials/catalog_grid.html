@@ -1,0 +1,25 @@
+{% load site_tags %}<form class="toolbar" id="catalog-filters" role="search" aria-label="Фильтры каталога" action="#">
+  <div class="toolbar__row">
+    <div class="chips" role="group" aria-label="Тип">
+      <button class="chip" type="button" data-filter="type" data-value="all" aria-pressed="true">Все</button>
+      {% for code, label in facets.types %}<button class="chip" type="button" data-filter="type" data-value="{{ code }}" aria-pressed="false">{{ label }}</button>{% endfor %}
+    </div>
+    <div class="chips" role="group" aria-label="Мощность">
+      {% for p in facets.powers %}<button class="chip" type="button" data-filter="power" data-value="{{ p }}" aria-pressed="false">{{ p }} кВт</button>{% endfor %}
+    </div>
+    <span class="toolbar__count" id="catalog-count" aria-live="polite"></span>
+  </div>
+  <div class="toolbar__row">
+    <div class="field"><label for="f-search">Поиск</label><input id="f-search" type="search" placeholder="Поиск по модели…" autocomplete="off"></div>
+    <div class="field"><label for="f-line">Линейка</label>
+      <select id="f-line"><option value="all">Все линейки</option>{% for l in facets.lines %}<option value="{{ l }}">Линейка {{ l }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="f-sort">Сортировка</label>
+      <select id="f-sort"><option value="default">По умолчанию</option><option value="price-asc">Сначала дешевле</option><option value="price-desc">Сначала дороже</option><option value="speed-desc">Самые быстрые</option><option value="range-desc">Максимальный запас хода</option></select></div>
+    <button class="btn btn--sm btn--ghost" type="button" id="f-reset">Сбросить</button>
+  </div>
+</form>
+<div class="grid grid--3 catalog-grid" id="catalog-grid">
+  {% for c in cards %}{% include "partials/card.html" %}{% endfor %}
+</div>
+<div class="empty" id="catalog-empty" role="status"><b>Ничего не найдено</b>Измените фильтры или <a href="{% url 'pages:contacts' %}">напишите нам</a> — подберём вариант.</div>
+<p class="price-note">{% icon "shield" %} Цены по курсу ЦБ РФ{% if price_ctx.rate_date %} на {{ price_ctx.rate_date|date:"d.m.Y" }}{% endif %} ({{ price_ctx.rate|rate_fmt }} ₽ за $). Стоимость без учёта доставки — она рассчитывается индивидуально.</p>

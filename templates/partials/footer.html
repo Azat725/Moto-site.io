@@ -1,0 +1,61 @@
+{% load site_tags %}<footer class="site-footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div class="footer__about">
+        <a class="logo" href="{% url 'pages:home' %}" aria-label="{{ brand }} — на главную">
+          {% logo_mark %}<span>IV<b>&amp;</b>AX MOTO<small>электромотоциклы</small></span>
+        </a>
+        <p>Электромотоциклы в {{ city_in }}: каталог, конфигуратор комплектаций и цены по курсу ЦБ РФ. Производство: Китай.</p>
+        {% if site.telegram_url or site.vk_url or site.whatsapp_url %}
+        <div class="socials">
+          {% if site.telegram_url %}<a href="{{ site.telegram_url }}" target="_blank" rel="noopener noreferrer" aria-label="Telegram">{% icon "chat" %}</a>{% endif %}
+          {% if site.vk_url %}<a href="{{ site.vk_url }}" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте">VK</a>{% endif %}
+          {% if site.whatsapp_url %}<a href="{{ site.whatsapp_url }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">{% icon "phone" %}</a>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+      <div class="footer__col">
+        <h3>Каталог</h3>
+        <ul>
+          <li><a href="{% url 'pages:catalog' %}">Все электромотоциклы</a></li>
+          <li><a href="{% url 'pages:catalog' %}?type=sport">Спортивные</a></li>
+          <li><a href="{% url 'pages:catalog' %}?type=naked">Нейкеды</a></li>
+          <li><a href="{% url 'pages:catalog' %}?type=touring">Туристические</a></li>
+          <li><a href="{% url 'pages:catalog' %}?line=MX">Линейка MX</a></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h3>Покупателям</h3>
+        <ul>
+          <li><a href="{% url 'pages:delivery' %}">Доставка и оплата</a></li>
+          <li><a href="{% url 'pages:reviews' %}">Отзывы</a></li>
+          <li><a href="{% url 'pages:about' %}">О нас</a></li>
+          <li><a href="{% url 'pages:contacts' %}">Контакты</a></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h3>Контакты</h3>
+        <address>
+          <a class="footer__phone" href="tel:{{ site.phone_raw }}">{{ site.phone }}</a>
+          <a href="mailto:{{ site.email }}">{{ site.email }}</a>
+          <span>{{ site.address }}</span>
+          <span>{{ site.hours }}</span>
+        </address>
+      </div>
+    </div>
+    <div class="footer__legal">
+      <p>Информация на сайте носит справочный характер и не является публичной офертой (ст. 437 ГК РФ). Цены рассчитываются по курсу ЦБ РФ, указаны без учёта доставки и могут меняться вместе с курсом; итоговая стоимость, комплектация и цвет фиксируются в договоре. Изображения могут отличаться от реального товара.</p>
+      <p>Продавец: {{ site.legal_name }}; ИНН: {{ site.inn }}; ОГРН: {{ site.ogrn }}; адрес: {{ site.address }}.</p>
+      <div class="footer__bottom">
+        <span>© {% now "Y" %} IV<b>&amp;</b>AX MOTO</span>
+        <ul>
+          <li><a href="{% url 'pages:privacy' %}">Политика конфиденциальности</a></li>
+          <li><a href="{% url 'pages:consent' %}">Согласие на обработку ПДн</a></li>
+          <li><a href="{% url 'pages:terms' %}">Пользовательское соглашение</a></li>
+          <li><a href="{% url 'pages:cookies' %}">Политика cookie</a></li>
+          <li><button type="button" data-cookie-settings>Настройки cookie</button></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,22 @@
+{% extends "pages/_simple.html" %}{% load site_tags %}
+{% block title %}Доставка и оплата электромотоциклов — {{ city }} и регионы{% endblock %}
+{% block description %}Как купить электромотоцикл в IV&AX MOTO: заявка, согласование комплектации, договор и оплата, доставка в Нижнекамск и другие города. Стоимость доставки рассчитывается индивидуально.{% endblock %}
+{% block lead %}<p class="lead">Цены на сайте указаны без доставки: её стоимость зависит от города, количества техники и транспортной компании, поэтому мы рассчитываем её индивидуально.</p>{% endblock %}
+{% block body %}
+<section class="section">
+  <div class="container">
+    <div class="grid grid--3" data-stagger>
+      <article class="feature" data-reveal data-n="01"><div class="feature__icon">{% icon "sliders" %}</div><h3>Заявка</h3><p>Соберите комплектацию в конфигураторе и отправьте заявку — или просто позвоните нам.</p></article>
+      <article class="feature" data-reveal data-n="02"><div class="feature__icon">{% icon "chat" %}</div><h3>Согласование</h3><p>Менеджер уточнит опции, цвет, город доставки и рассчитает итоговую стоимость.</p></article>
+      <article class="feature" data-reveal data-n="03"><div class="feature__icon">{% icon "shield" %}</div><h3>Договор и оплата</h3><p>Стоимость, комплектация и условия фиксируются в договоре. Способы оплаты: <span class="ph">[заполнить: наличные / безналичный расчёт / предоплата %]</span>.</p></article>
+      <article class="feature" data-reveal data-n="04"><div class="feature__icon">{% icon "truck" %}</div><h3>Доставка</h3><p>Доставляем в {{ city }} и другие города России. Стоимость доставки рассчитывается индивидуально и не входит в цену на сайте.</p></article>
+      <article class="feature" data-reveal data-n="05"><div class="feature__icon">{% icon "palette" %}</div><h3>Цвет и опции</h3><p>Выберите цвет из палитры или предложите свой — вариант окраски согласуем с менеджером.</p></article>
+      <article class="feature" data-reveal data-n="06"><div class="feature__icon">{% icon "tools" %}</div><h3>Документы</h3><p>Подскажем, какие документы понадобятся для регистрации и страхования электромотоцикла.</p></article>
+    </div>
+    <p class="price-note" data-reveal>{% icon "shield" %} Цены пересчитываются по официальному курсу ЦБ РФ и могут меняться вместе с курсом. Информация на сайте не является публичной офертой.</p>
+  </div>
+</section>
+<section class="section section--alt section--dark-alt" id="callback">
+  <div class="container"><div class="lead-box" data-reveal><h2>Рассчитать доставку</h2>{% include "partials/lead_form.html" with kind="contact" btn="Рассчитать доставку" %}</div></div>
+</section>
+{% endblock %}

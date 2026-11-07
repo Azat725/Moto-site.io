@@ -1,0 +1,11 @@
+{% extends "pages/_simple.html" %}
+{% block title %}Спасибо за заявку{% endblock %}
+{% block description %}Заявка отправлена. Менеджер IV&AX MOTO свяжется с вами в рабочее время.{% endblock %}
+{% block heading %}{% if request.GET.error %}Не удалось отправить заявку{% else %}Спасибо! Заявка <span class="accent">принята</span>{% endif %}{% endblock %}
+{% block body %}
+<section class="section"><div class="container">
+  {% if request.GET.error %}<p>Проверьте данные формы и попробуйте ещё раз или позвоните нам: <a href="tel:{{ site.phone_raw }}">{{ site.phone }}</a>.</p>
+  {% else %}<p>Менеджер свяжется с вами в рабочее время ({{ site.hours }}).</p>{% endif %}
+  <p><a class="btn" href="{% url 'pages:catalog' %}">Вернуться в каталог</a></p>
+</div></section>
+{% endblock %}

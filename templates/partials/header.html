@@ -1,0 +1,66 @@
+{% load site_tags %}<header class="site-header" id="site-header">
+  <div class="topbar">
+    <div class="container topbar__in">
+      <div class="topbar__meta">
+        <span>{% icon "pin" %} {{ city }}, {{ region }}</span>
+        <span>{% icon "clock" %} {{ site.hours }}</span>
+      </div>
+      <a href="tel:{{ site.phone_raw }}">{% icon "phone" %} {{ site.phone }}</a>
+    </div>
+  </div>
+  <div class="navbar">
+    <div class="container navbar__in">
+      <a class="logo" href="{% url 'pages:home' %}" aria-label="{{ brand }} — на главную">
+        {% logo_mark %}
+        <span>IV<b>&amp;</b>AX MOTO<small>электромотоциклы</small></span>
+      </a>
+      <nav class="nav" aria-label="Основное меню">
+        <ul>
+          {% url 'pages:catalog' as u_catalog %}{% url 'pages:delivery' as u_delivery %}{% url 'pages:reviews' as u_reviews %}{% url 'pages:about' as u_about %}{% url 'pages:contacts' as u_contacts %}
+          <li><a href="{{ u_catalog }}"{% if request.path == u_catalog %} aria-current="page"{% endif %}>Каталог</a></li>
+          <li><a href="{{ u_delivery }}"{% if request.path == u_delivery %} aria-current="page"{% endif %}>Доставка и оплата</a></li>
+          <li><a href="{{ u_reviews }}"{% if request.path == u_reviews %} aria-current="page"{% endif %}>Отзывы</a></li>
+          <li><a href="{{ u_about }}"{% if request.path == u_about %} aria-current="page"{% endif %}>О нас</a></li>
+          <li><a href="{{ u_contacts }}"{% if request.path == u_contacts %} aria-current="page"{% endif %}>Контакты</a></li>
+        </ul>
+      </nav>
+      <div class="navbar__cta">
+        <a class="navbar__phone" href="tel:{{ site.phone_raw }}">{{ site.phone }}</a>
+        <a class="btn btn--sm" href="{% url 'pages:home' %}#callback" data-magnetic>Заказать звонок</a>
+      </div>
+      <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu" aria-label="Мобильное меню">
+  <nav aria-label="Мобильное меню">
+    <ul>
+      <li style="--i:0"><a class="mm-link" href="{% url 'pages:catalog' %}">Каталог {% icon "arrow" %}</a></li>
+      <li style="--i:1"><a class="mm-link" href="{% url 'pages:delivery' %}">Доставка {% icon "arrow" %}</a></li>
+      <li style="--i:2"><a class="mm-link" href="{% url 'pages:reviews' %}">Отзывы {% icon "arrow" %}</a></li>
+      <li style="--i:3"><a class="mm-link" href="{% url 'pages:about' %}">О нас {% icon "arrow" %}</a></li>
+      <li style="--i:4"><a class="mm-link" href="{% url 'pages:contacts' %}">Контакты {% icon "arrow" %}</a></li>
+    </ul>
+  </nav>
+  <div class="mobile-menu__foot">
+    <a href="tel:{{ site.phone_raw }}">{{ site.phone }}</a>
+    <span>{{ site.address }}</span>
+    <span>{{ site.hours }}</span>
+  </div>
+</div>
+
+<div class="mobile-bar" id="mobile-bar">
+  <a class="btn btn--ghost" href="tel:{{ site.phone_raw }}">{% icon "phone" %} Позвонить</a>
+  <a class="btn" href="{% url 'pages:catalog' %}">{% icon "bolt" %} Каталог</a>
+</div>
+
+<button class="gauge" id="gauge" type="button" aria-label="Наверх">
+  <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+    <path class="g-track" d="M23.13 76.87A38 38 0 1 1 76.87 76.87"/>
+    <path class="g-zone" d="M87.53 44.06A38 38 0 0 1 76.87 76.87"/>
+    <g class="g-needle"><line x1="50" y1="50" x2="50" y2="18"/></g>
+    <circle class="g-hub" cx="50" cy="50" r="5"/>
+    <path class="g-arrow" d="M43 70L50 63L57 70"/>
+  </svg>
+</button>

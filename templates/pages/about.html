@@ -1,0 +1,29 @@
+{% extends "pages/_simple.html" %}{% load site_tags %}
+{% block title %}О компании IV&AX MOTO — электромотоциклы в Нижнекамске{% endblock %}
+{% block description %}IV&AX MOTO — продажа электромотоциклов в Нижнекамске: каталог моделей 5–15 кВт, конфигуратор комплектаций, работа через менеджера и доставка по России.{% endblock %}
+{% block heading %}О компании <span class="accent">IV&amp;AX MOTO</span>{% endblock %}
+{% block lead %}<p class="lead">Работаем с поставщиком напрямую и помогаем собрать комплектацию под ваши задачи.</p>{% endblock %}
+{% block body %}
+<section class="section">
+  <div class="container split-section">
+    <div data-reveal="left">
+      <span class="eyebrow">Кто мы</span>
+      <h2>Электромотоциклы без компромиссов</h2>
+      <p>IV&amp;AX MOTO — команда из Нижнекамска, которая занимается электромотоциклами. В каталоге — спортбайки, нейкеды, круизеры и туристические модели мощностью от 5 до 15 кВт.</p>
+      <p>Каждую модель можно собрать под себя: батарея, мощность, опции и цвет. Цена считается сразу, а финальную комплектацию мы согласуем с вами и закрепим в договоре.</p>
+      <p><span class="ph">Текст-заглушка: добавьте историю компании, опыт и сервис</span></p>
+    </div>
+    <div data-reveal="right" class="about-logo">{% logo_mark "" "about-logo__mark" %}</div>
+  </div>
+</section>
+<section class="section section--light">
+  <div class="container">
+    <div class="grid grid--4" data-stagger>
+      <article class="feature" data-reveal data-n="01"><div class="feature__icon">{% icon "bolt" %}</div><h3>Только электро</h3><p>Тихо, без бензина и масла, с зарядкой от розетки или станции Type 2 (опция).</p></article>
+      <article class="feature" data-reveal data-n="02"><div class="feature__icon">{% icon "sliders" %}</div><h3>Своя комплектация</h3><p>Выбирайте батарею, опции и цвет в конфигураторе.</p></article>
+      <article class="feature" data-reveal data-n="03"><div class="feature__icon">{% icon "shield" %}</div><h3>Честная цена</h3><p>Цена по курсу ЦБ РФ на дату на странице, без скрытых наценок за опции.</p></article>
+      <article class="feature" data-reveal data-n="04"><div class="feature__icon">{% icon "truck" %}</div><h3>Доставка</h3><p>Организуем доставку в ваш город, стоимость — индивидуально.</p></article>
+    </div>
+  </div>
+</section>
+{% endblock %}

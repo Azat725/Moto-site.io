@@ -1,0 +1,12 @@
+{
+  "_comment": "Эталонные расчёты цены. Используются тестами pytest (apps/catalog/pricing.py) и Playwright (static/js/configurator.js). Формула: каждый компонент = round_half_up($ × курс × 100) копеек; к варианту прибавляется наценка; итог округляется вверх до шага.",
+  "vectors": [
+    {"name": "HY-M 60 А·ч без опций", "rate": "81.1234", "markup": 100000, "step": 1000, "variant_usd": "2285", "options_usd": [], "expected_rub": 286000},
+    {"name": "HY-M 120 А·ч + ABS + TFT", "rate": "81.1234", "markup": 100000, "step": 1000, "variant_usd": "2380", "options_usd": ["223", "80"], "expected_rub": 318000},
+    {"name": "JY-MX все включено", "rate": "81.1234", "markup": 100000, "step": 1000, "variant_usd": "4500", "options_usd": [], "expected_rub": 466000},
+    {"name": "Точное попадание на шаг", "rate": "100", "markup": 100000, "step": 1000, "variant_usd": "2000", "options_usd": [], "expected_rub": 300000},
+    {"name": "Копейка сверх шага", "rate": "100", "markup": 100000, "step": 1000, "variant_usd": "2000.01", "options_usd": [], "expected_rub": 301000},
+    {"name": "Шаг 1 ₽", "rate": "92.5050", "markup": 0, "step": 1, "variant_usd": "2160", "options_usd": ["30", "30"], "expected_rub": 205362},
+    {"name": "Наценка 0, шаг 5000", "rate": "78.9", "markup": 0, "step": 5000, "variant_usd": "2540", "options_usd": [], "expected_rub": 205000}
+  ]
+}

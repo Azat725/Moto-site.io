@@ -1,0 +1,27 @@
+{% load site_tags %}{# Параметры: kind (callback|model|contact), moto (необязательно), btn #}
+<form class="form" data-lead-form data-kind="{{ kind }}" id="lead-{{ kind }}" method="post" action="{% url 'leads:create' %}" novalidate>
+  {% if site_mode == "live" %}{% csrf_token %}{% endif %}
+  <input type="hidden" name="kind" value="{{ kind }}">
+  {% if moto %}<input type="hidden" name="model" value="{{ moto.slug }}">
+  <input type="hidden" name="variant" value=""><input type="hidden" name="options" value="">
+  <input type="hidden" name="color" value=""><input type="hidden" name="client_total" value="">{% endif %}
+  <input type="hidden" name="page" value="{{ request.path_info }}">
+  <input type="hidden" name="started_at" value="">
+  <div class="form__row">
+    <div class="field"><label for="{{ kind }}-name">Ваше имя</label><input id="{{ kind }}-name" name="name" type="text" autocomplete="name" required minlength="2" maxlength="80" placeholder="Иван"><span class="field__error">Введите имя (не короче 2 символов)</span></div>
+    <div class="field"><label for="{{ kind }}-phone">Телефон</label><input id="{{ kind }}-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="+7 (___) ___-__-__" data-phone><span class="field__error">Укажите телефон полностью</span></div>
+  </div>
+  {% if kind != "callback" %}<div class="field"><label for="{{ kind }}-msg">Комментарий (необязательно)</label><textarea id="{{ kind }}-msg" name="message" maxlength="600" placeholder="Удобное время, вопросы по комплектации, город доставки…"></textarea></div>{% endif %}
+  <fieldset class="field fieldset-plain"><legend class="sr-only">Как с вами связаться</legend>
+    <div class="contact-way" role="radiogroup" aria-label="Способ связи">
+      <label><input type="radio" name="way" value="call" checked><span>Позвоните мне</span></label>
+      <label><input type="radio" name="way" value="messenger"><span>Напишите в мессенджер</span></label>
+    </div>
+  </fieldset>
+  <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label class="check"><input type="checkbox" name="consent" value="1" required><span class="box" aria-hidden="true"></span><span>Я даю <a href="{% url 'pages:consent' %}" target="_blank" rel="noopener">согласие на обработку персональных данных</a> и ознакомлен(а) с <a href="{% url 'pages:privacy' %}" target="_blank" rel="noopener">Политикой конфиденциальности</a>.</span></label>
+  <p class="field__error" data-consent-error hidden>Без согласия на обработку персональных данных мы не можем принять заявку.</p>
+  <button class="btn btn--block" type="submit" data-magnetic>{{ btn|default:"Отправить заявку" }} {% icon "arrow" "arrow" %}</button>
+  <p class="form-note">Мы свяжемся с вами в рабочее время ({{ site.hours }}). Отправка заявки ни к чему вас не обязывает.</p>
+  <div class="form-status" role="status" aria-live="polite"></div>
+</form>

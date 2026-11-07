@@ -1,0 +1,19 @@
+{% extends "pages/legal/_legal.html" %}
+{% block description %}Какие cookie использует сайт IV&AX MOTO и как управлять согласием: необходимые, аналитические и маркетинговые файлы.{% endblock %}
+{% block legal %}
+<h2>1. Что такое cookie</h2>
+<p>Cookie — небольшие файлы, которые сайт сохраняет в браузере. К ним близки localStorage и sessionStorage.</p>
+<h2>2. Какие cookie мы используем</h2>
+<div class="table-scroll"><table>
+  <thead><tr><th>Категория</th><th>Зачем</th><th>Примеры</th><th>Срок</th><th>Согласие</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Необходимые</strong></td><td>Работа сайта, защита форм от подделки запросов, запоминание выбора cookie</td><td><code>csrftoken</code>, <code>ivax_cookie_consent</code> (localStorage), <code>ivax_seen</code> (sessionStorage); для сотрудников — <code>sessionid</code> в админке</td><td>до 12 месяцев / до закрытия вкладки</td><td>Не требуется</td></tr>
+    <tr><td><strong>Аналитические</strong></td><td>Статистика посещений</td><td><span class="ph">[Яндекс.Метрика — если подключена]</span></td><td>до 12 месяцев</td><td><strong>Требуется</strong></td></tr>
+    <tr><td><strong>Маркетинговые</strong></td><td>Реклама на сторонних площадках</td><td><span class="ph">[перечислить, если подключены]</span></td><td>по политике сервиса</td><td><strong>Требуется</strong></td></tr>
+  </tbody>
+</table></div>
+<p class="note">Сейчас аналитические и маркетинговые скрипты не подключены. Если появятся — они загрузятся только после вашего согласия.</p>
+<h2>3. Как изменить выбор</h2>
+<p>Нажмите «Настройки cookie» в подвале любой страницы или удалите cookie в настройках браузера.</p>
+<p><button class="btn btn--dark btn--sm" type="button" data-cookie-settings>Открыть настройки cookie</button></p>
+{% endblock %}

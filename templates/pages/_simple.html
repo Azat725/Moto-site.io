@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_key %}{{ page_key }}{% endblock %}
+{% block content %}
+<section class="page-hero page-hero--compact">
+  <div class="container">
+    {% include "partials/breadcrumbs.html" with current=page_title %}
+    <h1>{% block heading %}{{ page_title }}{% endblock %}</h1>
+    {% block lead %}{% endblock %}
+  </div>
+</section>
+{% block body %}{% endblock %}
+{% endblock %}

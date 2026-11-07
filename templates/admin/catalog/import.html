@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Главная</a> › <a href="{% url 'admin:catalog_motorcycle_changelist' %}">Электромотоциклы</a> › Импорт</div>{% endblock %}
+{% block content %}
+<div id="content-main">
+  {% if report %}
+    <p>Моделей в файле: <b>{{ count }}</b>. Проверьте изменения и нажмите «Применить».</p>
+    <table>
+      <thead><tr><th>Модель</th><th>Что будет</th><th>Изменения</th></tr></thead>
+      <tbody>
+      {% for item in report.changes %}
+        <tr>
+          <td><b>{{ item.name }}</b><br><small>{{ item.slug }}</small></td>
+          <td>{% if item.status == "new" %}Новая модель{% elif item.status == "changed" %}Будет обновлена{% else %}Без изменений{% endif %}</td>
+          <td>{% for line in item.changes %}<div>{{ line }}</div>{% empty %}—{% endfor %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% if report.missing %}
+      <p>Есть на сайте, но нет в файле (не изменятся): {{ report.missing|join:", " }}</p>
+    {% endif %}
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="step" value="apply">
+      <input type="submit" class="default" value="Применить">
+      <a class="button" href="{% url 'admin:catalog_motorcycle_import' %}">Отмена</a>
+    </form>
+  {% else %}
+    <p>Одна строка таблицы — один вариант модели (мощность / АКБ). Колонки модели повторяются в каждой строке.
+      Колонки опций называются <code>opt:код</code>: число — цена в $, «включено» — входит в комплектацию, пусто — опции нет.
+      Скачайте <a href="{% url 'admin:catalog_motorcycle_export' %}">текущий каталог в Excel</a> и используйте его как шаблон.</p>
+    <form method="post" enctype="multipart/form-data">{% csrf_token %}
+      {{ form.as_p }}
+      <input type="submit" class="default" value="Проверить файл">
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

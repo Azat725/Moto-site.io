@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load site_tags %}
+{% block title %}Страница не найдена{% endblock %}
+{% block description %}Такой страницы нет. Перейдите в каталог электромотоциклов IV&AX MOTO.{% endblock %}
+{% block page_key %}404{% endblock %}
+{% block preloader %}{% endblock %}
+{% block content %}
+<section class="e404"><div>
+  <div class="big" aria-hidden="true">404</div>
+  <h1>Кажется, мы свернули не туда</h1>
+  <p>Страницы нет или она переехала.</p>
+  <div class="hero__actions e404__actions">
+    <a class="btn" href="{% url 'pages:home' %}">На главную</a>
+    <a class="btn btn--ghost" href="{% url 'pages:catalog' %}">В каталог</a>
+  </div>
+</div></section>
+{% endblock %}

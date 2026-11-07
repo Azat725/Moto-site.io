@@ -1,0 +1,139 @@
+{% extends "base.html" %}{% load static site_tags %}
+{% block title %}Электромотоцикл {{ moto.name }} {{ card.power_label }} — купить в Нижнекамске{% if offer.min_price_rub %}, цена от {{ offer.min_price_rub|rub }}{% endif %}{% endblock %}
+{% block description %}Электромотоцикл {{ moto.name }}: {{ card.power_label }}, до {{ card.max_speed }} км/ч, запас хода до {{ card.max_range }} км. Соберите комплектацию онлайн — цена по курсу ЦБ РФ.{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}Электромотоцикл {{ moto.name }} — IV&AX MOTO{% endblock %}
+{% block page_key %}model{% endblock %}
+{% block scripts %}<script src="{% static 'js/configurator.js' %}" defer></script>{% endblock %}
+{% block content %}
+<section class="page-hero page-hero--compact">
+  <div class="container">
+    {% url 'pages:catalog' as catalog_url %}
+    {% include "partials/breadcrumbs.html" with parent_url=catalog_url parent_title="Каталог" current=moto.name %}
+    <h1>Электромотоцикл <span class="accent">{{ moto.name }}</span></h1>
+    <p class="lead">{{ moto.short }}</p>
+  </div>
+</section>
+
+<section class="section section--tight">
+  <div class="container product">
+    <div class="gallery" data-reveal="left">
+      <div class="gallery__main gallery__main--photo">
+        {% with photo=card.photo %}{% if photo %}<img src="{{ photo.image.url }}" alt="{{ photo.alt }}" width="{{ photo.width }}" height="{{ photo.height }}" fetchpriority="high">{% endif %}{% endwith %}
+        <p class="gallery__note">Фото производителя. Цвет и детали могут отличаться</p>
+      </div>
+      {% if moto.photos.all|length > 1 %}<div class="gallery__thumbs">{% for p in moto.photos.all %}<img src="{{ p.image.url }}" alt="{{ p.alt }}" width="{{ p.width }}" height="{{ p.height }}" loading="lazy">{% endfor %}</div>{% endif %}
+      <ul class="mini-specs mini-specs--4">
+        <li><b>{{ card.power_label }}</b><span>мощность</span></li>
+        <li><b>{{ card.max_speed }}</b><span>км/ч макс.</span></li>
+        <li><b>{{ card.max_range }}</b><span>км запас хода</span></li>
+        <li><b>{{ moto.get_cooling_display }}</b><span>охлаждение</span></li>
+      </ul>
+    </div>
+
+    <form class="configurator" id="configurator" data-reveal="right" aria-labelledby="cfg-title">
+      {% cfg_json cfg %}
+      <h2 id="cfg-title" class="configurator__title">{% icon "sliders" %} Конфигуратор</h2>
+
+      <fieldset class="cfg-group">
+        <legend>1. Мощность и батарея</legend>
+        {% for v in offer.variants %}
+        <label class="cfg-option cfg-option--variant">
+          <input type="radio" name="cfg-variant" value="{{ v.id }}" {% if forloop.first %}checked{% endif %}>
+          <span class="cfg-option__body"><span class="cfg-option__name">{{ v.label }}</span><span class="cfg-option__price">{{ v.price_rub|rub }}</span></span>
+        </label>
+        {% endfor %}
+      </fieldset>
+
+      {% if offer.options %}
+      <fieldset class="cfg-group">
+        <legend>2. Опции</legend>
+        {% for o in offer.options %}
+        <label class="cfg-option{% if o.included %} is-included{% endif %}">
+          <input type="checkbox" name="cfg-option" value="{{ o.code }}" {% if o.included %}checked disabled{% endif %}>
+          <span class="cfg-option__body"><span class="cfg-option__name">{{ o.name }}{% if o.description %}<small>{{ o.description }}</small>{% endif %}</span>
+            <span class="cfg-option__price">{% if o.included %}в комплектации{% elif o.plus_rub %}+{{ o.plus_rub|rub }}{% else %}по запросу{% endif %}</span></span>
+        </label>
+        {% endfor %}
+      </fieldset>
+      {% endif %}
+
+      <fieldset class="cfg-group">
+        <legend>{% if offer.options %}3{% else %}2{% endif %}. Цвет</legend>
+        <div class="swatches">
+          {% for color in colors %}
+          <label class="swatch" title="{{ color.name }}"><input type="radio" name="cfg-color" value="{{ color.code }}" {% if forloop.first %}checked{% endif %}><span style="--sw: {{ color.hex }}"></span><em>{{ color.name }}</em></label>
+          {% endfor %}
+          <label class="swatch swatch--other" title="Другой цвет"><input type="radio" name="cfg-color" value="other"><span></span><em>Другой — согласуем</em></label>
+        </div>
+      </fieldset>
+
+      <div class="cfg-total" aria-live="polite">
+        <div><small>Итого</small><b id="cfg-total">{{ offer.variants.0.price_rub|rub }}</b></div>
+        <a class="btn" href="#order" data-magnetic id="cfg-order">Отправить заявку менеджеру {% icon "arrow" "arrow" %}</a>
+      </div>
+      <p class="product__disclaimer">Цена ориентировочная: рассчитана по курсу ЦБ РФ{% if price_ctx.rate_date %} на {{ price_ctx.rate_date|date:"d.m.Y" }}{% endif %}, без учёта доставки (рассчитывается индивидуально). Не является публичной офертой; итоговая стоимость фиксируется в договоре.</p>
+    </form>
+  </div>
+</section>
+
+<section class="section section--light" aria-labelledby="specs-title">
+  <div class="container split-section split-section--top">
+    <div data-reveal>
+      <span class="eyebrow">Характеристики</span>
+      <h2 id="specs-title">{{ moto.name }}: технические данные</h2>
+      <table class="spec-table"><tbody>
+        <tr><th scope="row">Тип</th><td>{{ moto.get_type_display }}</td></tr>
+        <tr><th scope="row">Мотор</th><td>{{ card.power_label }}, {{ moto.motor_layout|lower }}</td></tr>
+        <tr><th scope="row">Охлаждение</th><td>{{ moto.get_cooling_display }}</td></tr>
+        <tr><th scope="row">Привод</th><td>{{ moto.get_drive_display }}</td></tr>
+        <tr><th scope="row">Батарея</th><td>{{ moto.battery_type }}, {{ moto.voltage_v }} В, {{ card.battery_label }}</td></tr>
+        <tr><th scope="row">Максимальная скорость</th><td>до {{ card.max_speed }} км/ч</td></tr>
+        <tr><th scope="row">Запас хода</th><td>{{ moto.range_min_km }}–{{ card.max_range }} км (зависит от батареи и режима езды)</td></tr>
+        <tr><th scope="row">Тормоза</th><td>{{ moto.brakes }}</td></tr>
+        <tr><th scope="row">Подвеска</th><td>спереди — {{ moto.suspension_front|lower }}; сзади — {{ moto.suspension_rear|lower }}</td></tr>
+        <tr><th scope="row">Шины</th><td>{{ moto.tyre_front }} / {{ moto.tyre_rear }}, {{ moto.tyre_kind|lower }}</td></tr>
+        <tr><th scope="row">Производство</th><td>{{ moto.origin_country }}</td></tr>
+      </tbody></table>
+      {% if offer.variants|length > 1 %}
+      <h3 class="variants-title">Варианты комплектации</h3>
+      <div class="table-scroll"><table class="spec-table spec-table--variants"><thead><tr><th>Вариант</th><th>Скорость</th><th>Запас хода</th><th>Цена</th></tr></thead><tbody>
+        {% for v, vo in variant_rows %}
+        <tr><td>{{ v.label }}</td><td>{{ v.top_speed_kmh|default:moto.top_speed_kmh }} км/ч</td><td>до {{ v.range_max_km|default:moto.range_max_km }} км</td><td>{{ vo.price_rub|rub }}</td></tr>
+        {% endfor %}
+      </tbody></table></div>
+      {% endif %}
+    </div>
+    <div data-reveal>
+      <span class="eyebrow">Описание</span>
+      <h2>О модели</h2>
+      {% for p in moto.description_paragraphs %}<p>{{ p }}</p>{% endfor %}
+      {% if moto.feature_list %}<ul class="check-list">{% for f in moto.feature_list %}<li>{{ f }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt section--dark-alt" id="order" aria-labelledby="order-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Заявка</span>
+      <h2 id="order-title">Хочу {{ moto.name }}</h2>
+      <p class="lead">Менеджер увидит выбранную комплектацию: <b id="order-summary">—</b></p>
+    </div>
+    <div class="lead-box" data-reveal>
+      {% include "partials/lead_form.html" with kind="model" btn="Отправить заявку менеджеру" %}
+    </div>
+  </div>
+</section>
+
+{% include "partials/reviews_block.html" %}
+
+{% if related %}
+<section class="section" aria-labelledby="related-title">
+  <div class="container">
+    <div class="section-head" data-reveal><span class="eyebrow">Ещё в каталоге</span><h2 id="related-title">Похожие модели</h2></div>
+    <div class="grid grid--3" data-stagger>{% for c in related %}{% include "partials/card.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% load static site_tags %}
+{% block title %}Вариант Б: лендинг + каталог{% endblock %}
+{% block description %}Вариант оформления главной страницы для сравнения: большой первый экран и каталог ниже.{% endblock %}
+{% block canonical %}{% abs_url "/" %}{% endblock %}
+{% block page_key %}home-classic{% endblock %}
+{% block scripts %}<script src="{% static 'js/catalog.js' %}" defer></script>{% endblock %}
+{% block content %}
+<div class="variant-banner" role="note">Вариант Б для сравнения: классический лендинг, каталог ниже первого экрана. <a href="{% url 'pages:home' %}">Вариант А (каталог сразу) →</a></div>
+<section class="hero" aria-labelledby="hero-title">
+  <div class="speed-lines" data-speed-lines aria-hidden="true"></div>
+  <div class="container hero__grid">
+    <div class="hero__copy">
+      <p class="hero__tag" data-reveal><i></i><span>IV&amp;AX MOTO · {{ city }}</span></p>
+      <h1 id="hero-title" class="split" data-split data-split-base="0.9">Электро<span class="accent">мотоциклы</span> <span class="outline-text">без бензина</span></h1>
+      <p class="hero__lead" data-reveal style="--d:1.4s">5–15 кВт, до 170 км/ч и до 300 км на заряде. Соберите комплектацию в конфигураторе — цена в рублях по курсу ЦБ РФ.</p>
+      <div class="hero__actions" data-reveal style="--d:1.6s">
+        <a class="btn pulse" href="#catalog" data-magnetic>Смотреть каталог {% icon "arrow" %}</a>
+        <a class="btn btn--ghost" href="#callback" data-magnetic>Заказать звонок</a>
+      </div>
+    </div>
+    {% with c=cards.0 %}{% if c.photo %}
+    <div class="hero__stage hero__stage--photo" data-parallax-root>
+      <div class="hero__ring hero-glow hero__layer" data-depth="-14" aria-hidden="true"></div>
+      <img class="hero__layer hero-photo" data-depth="10" src="{{ c.photo.image.url }}" alt="{{ c.photo.alt }}" width="{{ c.photo.width }}" height="{{ c.photo.height }}" fetchpriority="high">
+    </div>
+    {% endif %}{% endwith %}
+  </div>
+</section>
+<section class="section section--catalog" id="catalog"><div class="container">
+  <div class="section-head" data-reveal><span class="eyebrow">Каталог</span><h2>Выберите свой электромотоцикл</h2></div>
+  {% include "partials/catalog_grid.html" %}
+</div></section>
+{% include "partials/reviews_block.html" %}
+{% include "partials/faq.html" %}
+<section class="section section--alt section--dark-alt" id="callback"><div class="container"><div class="lead-box" data-reveal><h2>Мы перезвоним</h2>{% include "partials/lead_form.html" with kind="callback" btn="Перезвоните мне" %}</div></div></section>
+{% endblock %}

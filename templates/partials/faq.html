@@ -1,0 +1,11 @@
+<section class="section" id="faq" aria-labelledby="faq-title">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Вопросы и ответы</span>
+      <h2 id="faq-title">Частые вопросы</h2>
+    </div>
+    <div class="accordion" data-reveal>
+      {% for q, a in faq %}<details{% if forloop.first %} open{% endif %}><summary>{{ q }}</summary><div class="answer"><p>{{ a }}</p></div></details>{% endfor %}
+    </div>
+  </div>
+</section>

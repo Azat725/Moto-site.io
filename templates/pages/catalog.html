@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% load static site_tags %}
+{% block title %}Каталог электромотоциклов — цены в Нижнекамске{% endblock %}
+{% block description %}Каталог электромотоциклов IV&AX MOTO: спортбайки, нейкеды, круизеры и туринг 5–15 кВт. Фильтры по мощности и цене, цены по курсу ЦБ РФ.{% endblock %}
+{% block page_key %}catalog{% endblock %}
+{% block scripts %}<script src="{% static 'js/catalog.js' %}" defer></script>{% endblock %}
+{% block content %}
+<section class="page-hero page-hero--compact">
+  <div class="container">
+    {% include "partials/breadcrumbs.html" with current="Каталог" %}
+    <h1>Каталог <span class="accent">электромотоциклов</span></h1>
+    <p class="lead">Выберите модель и соберите комплектацию: мощность, батарея, опции и цвет — цена пересчитается сразу.</p>
+  </div>
+</section>
+<section class="section section--catalog" aria-label="Список электромотоциклов">
+  <div class="container">{% include "partials/catalog_grid.html" %}</div>
+</section>
+{% endblock %}

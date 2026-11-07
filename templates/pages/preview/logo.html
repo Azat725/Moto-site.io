@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% load site_tags %}
+{% block title %}Варианты логотипа{% endblock %}
+{% block description %}Три концепта логотипа IV&AX MOTO для сравнения.{% endblock %}
+{% block page_key %}preview-logo{% endblock %}
+{% block content %}
+<section class="page-hero page-hero--compact"><div class="container">
+  <h1>Логотип: <span class="accent">3 варианта</span></h1>
+  <p class="lead">Выберите концепт — он станет логотипом сайта (настройка SITE_LOGO). Сейчас выбран: «{{ request.GET.current|default:"volt" }}».</p>
+</div></section>
+<section class="section"><div class="container logo-compare">
+  {% for code, title, idea in logo_variants %}
+  <article class="logo-variant" data-reveal>
+    <h2>{{ title }}</h2>
+    <p>{{ idea }}</p>
+    <div class="logo-variant__row logo-variant__row--dark">
+      {% logo_mark code "logo-variant__big" %}
+      <span class="logo logo--static">{% logo_mark code %}<span>IV<b>&amp;</b>AX MOTO<small>электромотоциклы</small></span></span>
+    </div>
+    <div class="logo-variant__row logo-variant__row--light">
+      {% logo_mark code "logo-variant__small" %}{% logo_mark code "logo-variant__tiny" %}
+      <span class="logo logo--static logo--on-light">{% logo_mark code %}<span>IV<b>&amp;</b>AX MOTO</span></span>
+    </div>
+  </article>
+  {% endfor %}
+</div></section>
+{% endblock %}
