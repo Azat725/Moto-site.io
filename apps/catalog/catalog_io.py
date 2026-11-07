@@ -7,6 +7,7 @@
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 
@@ -26,6 +27,7 @@ CHOICE_ALIASES = {
     "drive": {"цепь": "chain", "ремень": "belt"},
     "cooling": {"воздушное": "air", "жидкостное": "liquid", "водяное": "liquid"},
 }
+SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 INCLUDED_WORDS = {"included", "incl", "включено", "входит", "вкл", "да"}
 
 
@@ -85,6 +87,10 @@ def normalize_model(raw: dict, option_codes: set[str]) -> dict:
     where = f"Модель {slug or raw.get('name', '?')}"
     if not slug or not raw.get("name"):
         raise CatalogError(f"{where}: обязательны slug и name")
+    if len(slug) > 60 or not SLUG_RE.match(slug):
+        raise CatalogError(f"{where}: адрес страницы (slug) — только латиница, цифры и дефисы, до 60 символов")
+    if len(str(raw["name"]).strip()) > 60:
+        raise CatalogError(f"{where}: название длиннее 60 символов")
     specs_in = raw.get("specs", {})
     specs = {}
     for key in SPEC_FIELDS:
@@ -115,7 +121,7 @@ def normalize_model(raw: dict, option_codes: set[str]) -> dict:
         "published": bool(raw.get("published", False)), "popular": bool(raw.get("popular", False)),
         "sort": int(raw.get("sort", 100) or 100), "short": str(raw.get("short", "")).strip(),
         "description": str(raw.get("description", "")).strip(), "features": tuple(features),
-        "specs": specs, "variants": variants, "options": options, "colors": raw.get("colors", "all"),
+        "specs": specs, "variants": variants, "options": options, "colors": raw.get("colors"),
     }
 
 
@@ -158,10 +164,18 @@ def export_models() -> list[dict]:
 def _current_snapshot(moto: Motorcycle) -> dict:
     return {
         "name": moto.name, "line": moto.line, "type": moto.type, "short": moto.short,
+        "description": moto.description, "features": tuple(moto.feature_list), "sort": moto.sort_order,
+        "published": moto.is_published, "popular": moto.is_popular,
         "specs": {k: getattr(moto, k) for k in SPEC_FIELDS},
-        "variants": sorted((v.label, str(v.price_usd) if v.price_usd is not None else None) for v in moto.variants.all()),
+        "variants": sorted(_variant_key(v.label, v.price_usd, {k: getattr(v, k) for k in VARIANT_FIELDS})
+                           for v in moto.variants.all()),
         "options": {o.option.code: ("included" if o.is_included else str(o.price_usd)) for o in moto.options.all()},
     }
+
+
+def _variant_key(label: str, price, fields: dict) -> tuple:
+    extras = tuple(str(fields.get(k) if fields.get(k) is not None else "") for k in VARIANT_FIELDS)
+    return (label, str(price) if price is not None else None, extras)
 
 
 def compare(models: list[dict]) -> CatalogReport:
@@ -173,10 +187,11 @@ def compare(models: list[dict]) -> CatalogReport:
             changes.append(ModelChange(item["slug"], item["name"], "new"))
             continue
         old = _current_snapshot(moto)
-        new_variants = sorted((v["label"], str(v["price_usd"]) if v["price_usd"] is not None else None)
-                              for v in item["variants"])
+        new_variants = sorted(_variant_key(v["label"], v["price_usd"], v) for v in item["variants"])
         diffs = [f"{k}: «{old['specs'][k]}» → «{v}»" for k, v in item["specs"].items() if old["specs"].get(k) != v]
-        diffs += [f"{k}: «{old[k]}» → «{item[k]}»" for k in ("name", "line", "type", "short") if old[k] != item[k]]
+        diffs += [f"{k}: «{old[k]}» → «{item[k]}»" for k in ("name", "line", "type", "short", "sort") if old[k] != item[k]]
+        diffs += [f"{k} изменено" for k in ("description", "features") if old[k] != item[k]]
+        diffs += [f"публикация {k}: {old[k]} → {item[k]}" for k in ("published", "popular") if old[k] != item[k]]
         if old["variants"] != new_variants:
             diffs.append("варианты/цены изменены")
         if old["options"] != item["options"]:
@@ -202,7 +217,8 @@ def apply(models: list[dict], update_publication: bool = True) -> int:
         _sync_variants(moto, item["variants"])
         _sync_options(moto, item["options"], option_ids)
         codes = item["colors"]
-        moto.colors.set(all_colors if codes == "all" else [c for c in all_colors if c.code in set(codes)])
+        if codes is not None:  # нет колонки цветов — выбранные владельцем цвета не трогаем
+            moto.colors.set(all_colors if codes == "all" else [c for c in all_colors if c.code in set(codes)])
     return len(models)
 
 

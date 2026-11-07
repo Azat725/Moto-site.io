@@ -1,0 +1,10 @@
+# /etc/systemd/system/ivax-rate.timer — каждые 3 часа
+[Unit]
+Description=IV&AX MOTO rate update timer
+
+[Timer]
+OnCalendar=*-*-* 00/3:05:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

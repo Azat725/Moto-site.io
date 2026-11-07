@@ -11,9 +11,10 @@ SITE_DOMAIN = env("SITE_DOMAIN", "https://azat725.github.io/Moto-site.io").rstri
 FORCE_SCRIPT_NAME = BASE_PATH.rstrip("/")
 STATIC_URL = BASE_PATH + "static/"
 MEDIA_URL = BASE_PATH + "media/"
+MEDIA_ROOT = BASE_DIR / "data" / "pages-media"
 DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "data" / "pages-build.sqlite3"}}
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
-EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+MAILERS = {"default": {"BACKEND": "django.core.mail.backends.locmem.EmailBackend"}}

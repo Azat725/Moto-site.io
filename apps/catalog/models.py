@@ -163,6 +163,7 @@ class Variant(models.Model):
         verbose_name = "Вариант (мощность / АКБ)"
         verbose_name_plural = "Варианты (мощность / АКБ)"
         ordering = ["sort_order", "id"]
+        constraints = [models.UniqueConstraint(fields=["motorcycle", "label"], name="uniq_variant_label")]
 
     def __str__(self) -> str:
         return f"{self.motorcycle.name} — {self.label}"
@@ -213,6 +214,12 @@ class MotorcycleOption(models.Model):
     def is_included(self) -> bool:
         return self.status == self.Status.INCLUDED
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        if self.status == self.Status.OPTIONAL and self.price_usd is None:
+            raise ValidationError({"price_usd": "Укажите цену опции или отметьте «Входит в комплектацию»."})
+
 
 class Color(models.Model):
     code = models.CharField("Код", max_length=40, unique=True, validators=[code_validator])
@@ -229,13 +236,21 @@ class Color(models.Model):
         return self.name
 
 
+def validate_image_file(field_file) -> None:
+    """Проверка в форме админки (ошибка покажется у поля, а не 500)."""
+    from .images import check_image
+
+    if field_file and not getattr(field_file, "_committed", True):
+        check_image(field_file.file)
+
+
 def photo_upload_to(instance: "Photo", filename: str) -> str:
     return f"bikes/{instance.motorcycle.slug}/{filename}"
 
 
 class Photo(models.Model):
     motorcycle = models.ForeignKey(Motorcycle, on_delete=models.CASCADE, related_name="photos")
-    image = models.ImageField("Фото", upload_to=photo_upload_to)
+    image = models.ImageField("Фото", upload_to=photo_upload_to, validators=[validate_image_file])
     alt = models.CharField("Описание для поисковиков (alt)", max_length=160)
     width = models.PositiveIntegerField(editable=False, default=0)
     height = models.PositiveIntegerField(editable=False, default=0)

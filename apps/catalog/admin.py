@@ -1,4 +1,5 @@
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.urls import path
 from django.utils.html import format_html
@@ -6,7 +7,7 @@ from django.utils.html import format_html
 from . import pricing
 from .admin_import import CatalogImportView, export_catalog_xlsx
 from .models import Color, Motorcycle, MotorcycleOption, OptionDef, Photo, SiteSettings, Variant
-from .services import build_offer, current_context
+from .services import current_context
 
 
 def _rub(value: int | None) -> str:
@@ -69,12 +70,26 @@ class MotorcycleAdmin(admin.ModelAdmin):
     )
 
     def get_urls(self):
+        def guarded(view):
+            def wrapper(request, *args, **kwargs):
+                if not request.user.has_perm("catalog.change_motorcycle"):
+                    raise PermissionDenied
+                return view(request, *args, **kwargs)
+            return self.admin_site.admin_view(wrapper)
+
         custom = [
-            path("import/", self.admin_site.admin_view(CatalogImportView.as_view(admin_site=self.admin_site)),
+            path("import/", guarded(CatalogImportView.as_view(admin_site=self.admin_site)),
                  name="catalog_motorcycle_import"),
-            path("export.xlsx", self.admin_site.admin_view(export_catalog_xlsx), name="catalog_motorcycle_export"),
+            path("export.xlsx", guarded(export_catalog_xlsx), name="catalog_motorcycle_export"),
         ]
         return custom + super().get_urls()
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("variants")
+
+    def changelist_view(self, request, extra_context=None):
+        self._price_ctx = current_context()  # один расчёт курса на страницу списка
+        return super().changelist_view(request, extra_context)
 
     @admin.display(description="Мощность")
     def power(self, obj):
@@ -82,7 +97,10 @@ class MotorcycleAdmin(admin.ModelAdmin):
 
     @admin.display(description="Цена от")
     def price_from(self, obj):
-        return _rub(build_offer(obj, current_context()).min_price_rub)
+        ctx = getattr(self, "_price_ctx", None) or current_context()
+        prices = [pricing.ceil_to_step(k, ctx.step) for v in obj.variants.all()
+                  if (k := pricing.variant_kopecks(v.price_usd, ctx)) is not None]
+        return _rub(min(prices, default=None))
 
     @admin.action(description="Опубликовать")
     def publish(self, request, queryset):

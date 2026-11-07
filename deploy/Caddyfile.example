@@ -1,0 +1,12 @@
+# Caddy автоматически получает TLS-сертификат. Замените домен.
+ivax-moto.ru, www.ivax-moto.ru {
+    encode zstd gzip
+    handle_path /media/* {
+        root * /srv/ivax/media
+        file_server
+    }
+    reverse_proxy 127.0.0.1:8000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}

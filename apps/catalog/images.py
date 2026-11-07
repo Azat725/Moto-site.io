@@ -14,9 +14,8 @@ MAX_SIDE = 1800
 MAX_BYTES = 10 * 1024 * 1024
 
 
-def normalize_upload(field_file):
-    """Возвращает новый файл WebP (макс. сторона 1800 px, без метаданных) или бросает ValidationError."""
-    upload = field_file.file
+def check_image(upload) -> None:
+    """Бросает ValidationError, если файл не JPEG/PNG/WebP разумного размера."""
     if getattr(upload, "size", 0) > MAX_BYTES:
         raise ValidationError("Файл больше 10 МБ.")
     try:
@@ -26,9 +25,19 @@ def normalize_upload(field_file):
                 raise ValidationError("Допустимы только JPEG, PNG или WebP.")
             if probe.width * probe.height > MAX_PIXELS:
                 raise ValidationError("Слишком большое разрешение изображения.")
-            image = ImageOps.exif_transpose(probe).convert("RGB")
     except (UnidentifiedImageError, OSError) as exc:
         raise ValidationError("Файл не является изображением.") from exc
+    finally:
+        upload.seek(0)
+
+
+def normalize_upload(field_file):
+    """Новый файл WebP (макс. сторона 1800 px, без метаданных; прозрачность сохраняется)."""
+    upload = field_file.file
+    check_image(upload)
+    with Image.open(upload) as probe:
+        image = ImageOps.exif_transpose(probe)
+        image = image.convert("RGBA" if "A" in image.getbands() or image.mode == "P" else "RGB")
 
     image.thumbnail((MAX_SIDE, MAX_SIDE))
     buffer = io.BytesIO()

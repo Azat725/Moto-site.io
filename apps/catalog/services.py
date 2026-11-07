@@ -65,7 +65,7 @@ def current_context() -> pricing.PriceContext:
     from apps.rates.services import current_rate
 
     site = SiteSettings.load()
-    rate = current_rate()
+    rate = current_rate(site)
     return pricing.PriceContext(
         rate=rate.value, markup_rub=site.markup_rub, step=site.rounding_step,
         rate_date=rate.effective_date, rate_source=rate.source,

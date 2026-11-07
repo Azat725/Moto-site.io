@@ -57,6 +57,7 @@ class Outbox(models.Model):
 
     class Status(models.TextChoices):
         PENDING = "pending", "Ожидает"
+        SENDING = "sending", "Отправляется"
         SENT = "sent", "Отправлено"
         DEAD = "dead", "Не доставлено"
 
@@ -68,6 +69,7 @@ class Outbox(models.Model):
     attempts = models.PositiveIntegerField("Попыток", default=0)
     next_attempt_at = models.DateTimeField("Следующая попытка", db_index=True)
     last_error = models.CharField("Последняя ошибка", max_length=500, blank=True)
+    locked_until = models.DateTimeField("Занято до", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     sent_at = models.DateTimeField(null=True, blank=True)
 

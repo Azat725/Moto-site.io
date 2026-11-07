@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from apps.leads.models import Lead
+from apps.leads.services import anonymize_leads
 
 
 class Command(BaseCommand):
@@ -12,7 +13,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         border = timezone.now() - timedelta(days=settings.LEAD_RETENTION_DAYS)
-        count = Lead.objects.filter(created_at__lt=border, anonymized_at__isnull=True).update(
-            name="—", phone="—", message="", ip_hash="", anonymized_at=timezone.now()
-        )
+        count = anonymize_leads(Lead.objects.filter(created_at__lt=border, anonymized_at__isnull=True))
         self.stdout.write(f"Обезличено заявок: {count}")

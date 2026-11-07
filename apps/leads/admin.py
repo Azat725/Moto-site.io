@@ -6,7 +6,8 @@ from django.utils import timezone
 from django.utils.html import format_html_join
 
 from .models import Lead, Outbox
-from .notifiers import deliver
+from .delivery import deliver
+from .services import anonymize_leads
 
 FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
 
@@ -59,7 +60,7 @@ class LeadAdmin(admin.ModelAdmin):
 
     @admin.action(description="Обезличить (удалить персональные данные)")
     def anonymize(self, request, queryset):
-        count = queryset.update(name="—", phone="—", message="", ip_hash="", anonymized_at=timezone.now())
+        count = anonymize_leads(queryset)
         self.message_user(request, f"Обезличено заявок: {count}", messages.SUCCESS)
 
     @admin.action(description="Выгрузить в CSV (Excel)")
@@ -85,7 +86,7 @@ class OutboxAdmin(admin.ModelAdmin):
     list_display = ("created_at", "channel", "subject", "status", "attempts", "next_attempt_at", "last_error")
     list_filter = ("status", "channel")
     readonly_fields = ("channel", "subject", "body", "lead", "status", "attempts", "next_attempt_at", "last_error",
-                       "created_at", "sent_at")
+                       "locked_until", "created_at", "sent_at")
     actions = ["retry_now"]
 
     def has_add_permission(self, request):
@@ -93,8 +94,9 @@ class OutboxAdmin(admin.ModelAdmin):
 
     @admin.action(description="Повторить отправку сейчас")
     def retry_now(self, request, queryset):
-        items = list(queryset.exclude(status=Outbox.Status.SENT))
-        for item in items:
-            item.status = Outbox.Status.PENDING
-        ok = sum(deliver(item) for item in items)
-        self.message_user(request, f"Отправлено: {ok} из {len(items)}", messages.INFO)
+        ids = list(queryset.exclude(status=Outbox.Status.SENT).values_list("pk", flat=True))
+        Outbox.objects.filter(pk__in=ids, status=Outbox.Status.DEAD).update(
+            status=Outbox.Status.PENDING, next_attempt_at=timezone.now(), attempts=0)
+        Outbox.objects.filter(pk__in=ids, status=Outbox.Status.PENDING).update(next_attempt_at=timezone.now())
+        ok = sum(deliver(pk) for pk in ids)
+        self.message_user(request, f"Отправлено: {ok} из {len(ids)}", messages.INFO)

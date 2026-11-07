@@ -1,0 +1,12 @@
+# /etc/systemd/system/ivax-rate.service — обновление курса ЦБ (запускается таймером)
+[Unit]
+Description=IV&AX MOTO: update CBR rate and purge old leads
+
+[Service]
+Type=oneshot
+User=ivax
+WorkingDirectory=/srv/ivax/app
+EnvironmentFile=/srv/ivax/app/.env
+Environment=DJANGO_SETTINGS_MODULE=config.settings.prod
+ExecStart=/srv/ivax/app/.venv/bin/python manage.py update_rate --soft
+ExecStart=/srv/ivax/app/.venv/bin/python manage.py purge_leads

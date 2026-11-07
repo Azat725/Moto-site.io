@@ -52,6 +52,12 @@ def last_accepted(currency: str = "USD") -> Rate | None:
     return Rate.objects.filter(currency=currency, accepted=True).order_by("-effective_date", "-fetched_at").first()
 
 
+def _confirmed_by_previous_rejection(parsed: ParsedRate) -> bool:
+    """Большой скачок принимаем, если предыдущая (отклонённая) попытка дала почти тот же курс."""
+    last = Rate.objects.filter(currency=parsed.currency).order_by("-fetched_at").first()
+    return bool(last and not last.accepted and abs(last.value - parsed.value) / parsed.value * 100 <= 1)
+
+
 def _validate(parsed: ParsedRate, previous: Rate | None) -> str:
     """Пустая строка — курс принят; иначе причина отказа."""
     conf = settings.RATES
@@ -59,7 +65,7 @@ def _validate(parsed: ParsedRate, previous: Rate | None) -> str:
         return f"Курс {parsed.value} вне допустимого диапазона {conf['MIN']}–{conf['MAX']}"
     if previous is not None and previous.value > 0:
         jump = abs(parsed.value - previous.value) / previous.value * 100
-        if jump > conf["MAX_JUMP_PCT"]:
+        if jump > conf["MAX_JUMP_PCT"] and not _confirmed_by_previous_rejection(parsed):
             return f"Скачок курса {jump:.1f}% больше допустимых {conf['MAX_JUMP_PCT']}%"
     return ""
 
@@ -87,13 +93,13 @@ def refresh_rate() -> RefreshResult:
     return RefreshResult(False, "Не удалось получить курс: " + "; ".join(errors))
 
 
-def current_rate() -> CurrentRate:
+def current_rate(site=None) -> CurrentRate:
     """Курс для расчёта цен: ручной → последний принятый → запасной из настроек."""
     from apps.catalog.models import SiteSettings
 
-    site = SiteSettings.load()
+    site = site or SiteSettings.load()
     if site.rate_mode == SiteSettings.RateMode.MANUAL and site.manual_rate:
-        return CurrentRate(site.manual_rate, timezone.localdate(), "manual", False)
+        return CurrentRate(site.manual_rate, None, "manual", False)
     rate = last_accepted(settings.RATES["CURRENCY"])
     if rate is None:
         return CurrentRate(settings.RATES["FALLBACK"], None, "fallback", True)

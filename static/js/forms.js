@@ -76,7 +76,6 @@
   }
 
   function bind(form, url, okText) {
-    if (form.elements.started_at) form.elements.started_at.value = String(Date.now());
     form.addEventListener("change", function (e) { if (e.target.closest(".is-invalid")) mark(e.target, false); });
     form.addEventListener("submit", function (e) {
       e.preventDefault();

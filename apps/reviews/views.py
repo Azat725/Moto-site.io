@@ -20,16 +20,18 @@ def _respond(request, status: int, payload: dict):
 
 @require_POST
 def submit(request):
+    if settings.SITE_MODE != "live":
+        return _respond(request, 403, {"success": False, "error": "Демо-версия сайта: отзывы не принимаются."})
     ip_hash = hash_ip(client_ip(request))
-    limit, window = settings.REVIEW_RATE_LIMIT
-    if not hit(f"review:{ip_hash}", limit, window):
-        return _respond(request, 429, {"success": False, "error": "Слишком много отзывов с одного адреса."})
     form = ReviewForm(request.POST)
     if not form.is_valid():
         if any(e.code == "spam" for e in form.non_field_errors().as_data()):
             return _respond(request, 200, {"success": True})
         fields = {k: [str(e) for e in v] for k, v in form.errors.items() if k != "__all__"}
         return _respond(request, 400, {"success": False, "error": "Проверьте поля формы.", "fields": fields})
+    limit, window = settings.REVIEW_RATE_LIMIT
+    if not hit(f"review:{ip_hash}", limit, window):
+        return _respond(request, 429, {"success": False, "error": "Слишком много отзывов с одного адреса."})
     data = form.cleaned_data
     now = timezone.now()
     Review.objects.create(

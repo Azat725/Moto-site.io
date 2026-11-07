@@ -90,7 +90,7 @@ def rows_to_models(rows: list[dict]) -> list[dict]:
                 "description": row.get("description") or "", "features": row.get("features") or "",
                 "specs": {k: row.get(k) for k in SPEC_FIELDS},
                 "options": {k[4:]: v for k, v in row.items() if k.startswith("opt:") and v not in (None, "", "-", "нет")},
-                "variants": [], "colors": "all",
+                "variants": [], "colors": None,
             }
             grouped[slug] = model
         model["variants"].append({

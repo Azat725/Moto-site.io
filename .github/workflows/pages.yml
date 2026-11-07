@@ -1,0 +1,48 @@
+name: Pages demo
+
+# Статическое демо для согласования: собирается из Django (export_static) при каждом push в main
+# и каждый день после обновления курса ЦБ РФ, чтобы цены в демо были актуальными.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 13 * * *"   # 16:00 МСК
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Export static demo
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.pages
+        run: python manage.py export_static
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

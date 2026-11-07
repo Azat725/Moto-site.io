@@ -26,7 +26,7 @@ def expand_model(raw: dict, seed: dict) -> dict:
         "slug": raw["slug"], "name": raw["name"], "line": raw.get("line", ""), "type": raw["type"],
         "published": raw.get("published", True), "popular": raw.get("popular", False), "sort": raw.get("sort", 100),
         "short": raw.get("short", ""), "description": raw.get("description", ""), "features": raw.get("features", []),
-        "specs": specs, "variants": variants, "options": options, "colors": "all",
+        "specs": specs, "variants": variants, "options": options, "colors": raw.get("colors", "all"),
     }
 
 

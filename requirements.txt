@@ -1,0 +1,9 @@
+# Продакшен-зависимости (Python 3.13+). Обновлять осознанно, проверяя тесты.
+Django==6.1.3
+django-axes==9.0.0
+whitenoise==6.12.0
+gunicorn==26.2.0
+openpyxl==3.1.5
+defusedxml==0.7.1
+pillow==13.0.0
+requests==2.34.2

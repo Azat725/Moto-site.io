@@ -76,7 +76,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": DATA_DIR / "db.sqlite3",
-        "OPTIONS": {"timeout": 20, "init_command": "PRAGMA journal_mode=WAL;"},
+        "OPTIONS": {"timeout": 20, "transaction_mode": "IMMEDIATE",
+                    "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;"},
     }
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -105,7 +106,9 @@ MEDIA_ROOT = Path(env("MEDIA_ROOT", str(BASE_DIR / "media")))
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
 
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "ivax"}}
+# Файловый кэш общий для всех воркеров gunicorn (лимиты частоты заявок)
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+                      "LOCATION": str(DATA_DIR / "cache")}}
 
 # --- Безопасность (усиливается в prod.py) ---
 SESSION_COOKIE_HTTPONLY = True
@@ -132,6 +135,8 @@ AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = timedelta(minutes=15)
 AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 AXES_RESET_ON_SUCCESS = True
+AXES_IPWARE_PROXY_COUNT = 1 if env_bool("TRUSTED_PROXY", False) else 0
+AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_REAL_IP", "REMOTE_ADDR"]
 
 # --- Сайт ---
 ADMIN_PATH = env("ADMIN_PATH", "manage-ivax/").strip("/") + "/"
@@ -156,6 +161,8 @@ RATES = {
 
 # --- Заявки и уведомления ---
 IP_HASH_SALT = env("IP_HASH_SALT", "dev-salt")
+# true — сайт за Caddy/nginx: IP берём из X-Real-IP (прокси обязан его выставлять)
+TRUSTED_PROXY = env_bool("TRUSTED_PROXY", False)
 LEAD_RATE_LIMIT = (env_int("LEAD_RATE_LIMIT_COUNT", 5), env_int("LEAD_RATE_LIMIT_SECONDS", 600))
 REVIEW_RATE_LIMIT = (env_int("REVIEW_RATE_LIMIT_COUNT", 3), env_int("REVIEW_RATE_LIMIT_SECONDS", 86400))
 LEAD_MIN_FILL_SECONDS = env_int("LEAD_MIN_FILL_SECONDS", 3)
@@ -170,14 +177,22 @@ TELEGRAM = {
     "TIMEOUT": 10,
 }
 LEAD_NOTIFY_EMAILS = env_list("LEAD_NOTIFY_EMAILS", [])
-EMAIL_BACKEND = env("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
-EMAIL_HOST = env("EMAIL_HOST", "")
-EMAIL_PORT = env_int("EMAIL_PORT", 465)
-EMAIL_HOST_USER = env("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")
-EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", True)
-EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", False)
-EMAIL_TIMEOUT = 15
+# Почта (Django 6.1: настройки MAILERS вместо устаревших EMAIL_*)
+SMTP_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+MAILERS = {
+    "default": {
+        "BACKEND": SMTP_BACKEND,
+        "OPTIONS": {
+            "host": env("EMAIL_HOST", "localhost"),
+            "port": env_int("EMAIL_PORT", 465),
+            "username": env("EMAIL_HOST_USER", ""),
+            "password": env("EMAIL_HOST_PASSWORD", ""),
+            "use_ssl": env_bool("EMAIL_USE_SSL", True),
+            "use_tls": env_bool("EMAIL_USE_TLS", False),
+            "timeout": 15,
+        },
+    }
+}
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "IV&AX MOTO <noreply@ivax-moto.ru>")
 OUTBOX_BACKOFF_SECONDS = [60, 300, 1800, 7200, 21600, 43200, 86400]
 OUTBOX_MAX_ATTEMPTS = 8

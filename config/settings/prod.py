@@ -21,3 +21,5 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
+# Preload-список HSTS включим после выбора постоянного домена (необратимо надолго).
+SILENCED_SYSTEM_CHECKS = ["security.W021"]

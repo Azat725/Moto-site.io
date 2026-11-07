@@ -1,11 +1,12 @@
 from django.conf import settings
 
 from apps.catalog.models import SiteSettings
+from apps.leads.forms import issue_form_token
 
 
 def site(request):
     """Общие данные для всех шаблонов сайта."""
-    if request.path.startswith("/" + settings.ADMIN_PATH):
+    if request.path_info.startswith("/" + settings.ADMIN_PATH):
         return {}
     return {
         "site": SiteSettings.load(),
@@ -17,4 +18,5 @@ def site(request):
         "city_in": "Нижнекамске",
         "region": "Республика Татарстан",
         "consent_version": settings.CONSENT_VERSION,
+        "form_token": issue_form_token(),
     }

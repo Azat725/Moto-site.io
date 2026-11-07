@@ -1,10 +1,7 @@
-import re
-
 from django import forms
 
 from apps.catalog.models import Motorcycle
-
-NAME_RE = re.compile(r"^[A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё \-'’.]{1,39}$")
+from apps.leads.forms import valid_person_name
 
 
 class ReviewForm(forms.Form):
@@ -21,13 +18,13 @@ class ReviewForm(forms.Form):
 
     def clean_display_name(self) -> str:
         name = " ".join(self.cleaned_data["display_name"].split())
-        if not NAME_RE.match(name):
+        if not valid_person_name(name, 40):
             raise forms.ValidationError("Имя — буквами, от 2 символов.")
         return name
 
     def clean_city(self) -> str:
         city = " ".join((self.cleaned_data.get("city") or "").split())
-        if city and not NAME_RE.match(city):
+        if city and not valid_person_name(city, 40):
             raise forms.ValidationError("Название города — буквами.")
         return city
 
