@@ -34,6 +34,7 @@ def main():
             "CADDY_SITE_ADDRESSES": "http://example.test", "SITE_NOINDEX": "true",
             "SECURE_SSL_REDIRECT": "true", "RATE_SOURCES": "", "TELEGRAM_BOT_TOKEN": "",
             "TELEGRAM_CHAT_ID": "", "LEAD_NOTIFY_EMAILS": "", "DOCKER_SUBNET": "172.30.251.0/24",
+            "DOCKER_DYNAMIC_RANGE": "172.30.251.128/25",
             "CADDY_CONTAINER_IP": "172.30.251.2",
         }
         env_file.write_text("\n".join(f"{k}={v}" for k, v in values.items()) + "\n", encoding="utf-8")

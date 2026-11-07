@@ -22,4 +22,4 @@ RUN mkdir -p /srv/ivax/data /srv/ivax/media /srv/ivax/backups /srv/ivax/app/stat
     && chmod 700 /srv/ivax/data /srv/ivax/backups && chmod 750 /srv/ivax/media
 USER 10001:10001
 ENTRYPOINT ["sh", "/srv/ivax/app/deploy/docker/entrypoint.sh"]
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "30", "--max-requests", "1000", "--max-requests-jitter", "100"]
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "30", "--control-socket", "/tmp/gunicorn.ctl", "--max-requests", "1000", "--max-requests-jitter", "100"]

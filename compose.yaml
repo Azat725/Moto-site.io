@@ -122,6 +122,7 @@ networks:
     ipam:
       config:
         - subnet: ${DOCKER_SUBNET:-172.30.61.0/24}
+          ip_range: ${DOCKER_DYNAMIC_RANGE:-172.30.61.128/25}
 
 volumes:
   data:
