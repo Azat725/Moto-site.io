@@ -33,4 +33,7 @@ jobs:
           ADMIN_PATH: ci-panel-for-checks/
           DJANGO_ALLOWED_HOSTS: example.com
           DJANGO_CSRF_TRUSTED_ORIGINS: https://example.com
-        run: python manage.py check --deploy --fail-level WARNING --settings=config.settings.prod
+          DATA_DIR: ${{ runner.temp }}/ivax-prod-check
+        run: |
+          mkdir -p "$DATA_DIR"
+          python manage.py check --deploy --fail-level WARNING --settings=config.settings.prod

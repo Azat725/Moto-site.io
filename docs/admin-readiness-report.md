@@ -124,6 +124,8 @@ Production теперь отвергает пустую/короткую сол�
 и неверные HTTPS CSRF origins; DEBUG выключен, образцы отзывов запрещены.
 CI получает все необходимые тестовые переменные. Caddy разделяет media и reverse proxy через
 взаимоисключающие handle-блоки согласно [документации Caddy](https://caddyserver.com/docs/caddyfile/directives/handle).
+Чистый Linux-прогон дополнительно выявил отсутствие игнорируемого каталога базы у production-check:
+CI теперь явно создаёт изолированный `DATA_DIR` в `runner.temp` перед проверкой SQLite.
 
 Полная инструкция — [DEPLOYMENT_VPS.md](../DEPLOYMENT_VPS.md): SSH, сервер/права, Python/SQLite,
 venv, `.env`, миграции, каталог, статика, владелец, Gunicorn/systemd, домен/HTTPS/Caddy,
