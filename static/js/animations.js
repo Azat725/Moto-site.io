@@ -1,4 +1,4 @@
-/* Анимации интерфейса: текст по буквам, появление при скролле, счётчики, 3D-наклон, магнитные кнопки, параллакс, курсор.
+/* Анимации интерфейса: текст по буквам, появление при скролле, 3D-наклон, магнитные кнопки, параллакс, курсор.
    Всё на transform/opacity, наблюдение — через IntersectionObserver, цикл — requestAnimationFrame. */
 (function () {
   "use strict";
@@ -59,27 +59,6 @@
     targets.forEach(function (t) { io.observe(t); });
   }
 
-  /* ---------- Счётчики ---------- */
-  function counters() {
-    var els = $$("[data-count]");
-    if (!els.length) return;
-    function run(el) {
-      var to = parseFloat(el.getAttribute("data-count")) || 0;
-      if (reduce) { el.textContent = to; return; }
-      var t0 = performance.now(), dur = 1500;
-      (function step(now) {
-        var p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(2, -10 * p);
-        el.textContent = Math.round(to * e);
-        if (p < 1) requestAnimationFrame(step); else el.textContent = to;
-      })(t0);
-    }
-    if (!("IntersectionObserver" in window)) { els.forEach(run); return; }
-    var io = new IntersectionObserver(function (en) {
-      en.forEach(function (x) { if (x.isIntersecting) { run(x.target); io.unobserve(x.target); } });
-    }, { threshold: 0.6 });
-    els.forEach(function (e) { io.observe(e); });
-  }
-
   /* ---------- 3D-наклон карточек с бликом ---------- */
   function tilt() {
     if (!fine || reduce || lite) return;
@@ -119,7 +98,7 @@
     });
   }
 
-  /* ---------- Hero: линии скорости, параллакс, «газ» ---------- */
+  /* ---------- Hero: линии скорости, параллакс ---------- */
   function hero() {
     var h = $$(".hero")[0];
     if (!h) return;
@@ -137,18 +116,6 @@
       }
       lines.appendChild(frag);
     }
-    var stage = $$("[data-parallax-root]", h)[0];
-    var bike = $$(".hero-bike", h)[0];
-
-    // «Газ»: нажми и держи на мотоцикле — колёса крутятся быстрее, линии скорости разгоняются
-    if (stage && bike && !reduce) {
-      var off;
-      var on = function () { clearTimeout(off); bike.classList.add("is-revving"); h.classList.add("is-revving"); };
-      var stop = function () { clearTimeout(off); off = setTimeout(function () { bike.classList.remove("is-revving"); h.classList.remove("is-revving"); }, 500); };
-      stage.addEventListener("pointerdown", on);
-      ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) { stage.addEventListener(t, stop); });
-    }
-
     // Параллакс слоёв от курсора (CSS-свойство translate не конфликтует с transform-анимациями)
     if (!fine || reduce || lite) return;
     var layers = $$(".hero__layer", h), tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
@@ -195,5 +162,5 @@
   }
 
   tilt(); magnetic(); hero(); cursor();
-  whenReady(function () { observe(); counters(); });
+  whenReady(function () { observe(); });
 })();

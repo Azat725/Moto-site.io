@@ -30,6 +30,7 @@ class OptionOffer:
     included: bool
     kopecks: int
     plus_rub: int
+    on_request: bool = False
 
 
 @dataclass(frozen=True)
@@ -95,6 +96,7 @@ def build_offer(moto: Motorcycle, ctx: pricing.PriceContext) -> Offer:
             code=o.option.code, name=o.option.name, description=o.option.description, included=o.is_included,
             kopecks=0 if o.is_included else (kop := pricing.option_kopecks(o.price_usd, ctx)),
             plus_rub=0 if o.is_included else pricing.display_rub(kop),
+            on_request=not o.is_included and o.price_usd is None,
         )
         for o in moto.options.all()
     )

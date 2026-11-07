@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import json
+import zipfile
 
 from django import forms
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
+from django.db import IntegrityError
 from django.views import View
+from openpyxl.utils.exceptions import InvalidFileException
 
 from . import catalog_io, spreadsheet
 from .models import OptionDef
@@ -24,6 +27,8 @@ class UploadForm(forms.Form):
 
 
 def _parse(upload) -> list[dict]:
+    if upload.size > spreadsheet.MAX_FILE_BYTES:
+        raise catalog_io.CatalogError("Файл больше 5 МБ")
     codes = set(OptionDef.objects.values_list("code", flat=True))
     rows = spreadsheet.read_table(upload.read())
     return [catalog_io.normalize_model(raw, codes) for raw in spreadsheet.rows_to_models(rows)]
@@ -65,19 +70,25 @@ class CatalogImportView(View):
             return self._render(request, form=form)
         try:
             models = _parse(form.cleaned_data["file"])
-        except (catalog_io.CatalogError, ValueError, KeyError) as exc:
+        except (catalog_io.CatalogError, ValueError, KeyError, ArithmeticError, zipfile.BadZipFile,
+                InvalidFileException) as exc:
             messages.error(request, f"Файл не принят: {exc}")
             return self._render(request, form=form)
         request.session[SESSION_KEY] = _to_session(models)
         request.session[SESSION_KEY + ":pub"] = form.cleaned_data["update_publication"]
-        return self._render(request, report=catalog_io.compare(models), count=len(models))
+        report = catalog_io.compare(models, form.cleaned_data["update_publication"])
+        return self._render(request, report=report, count=len(models))
 
     def _apply(self, request):
         payload = request.session.pop(SESSION_KEY, None)
         if not payload:
             messages.error(request, "Сначала загрузите файл.")
             return redirect("admin:catalog_motorcycle_import")
-        count = catalog_io.apply(_from_session(payload), request.session.pop(SESSION_KEY + ":pub", False))
+        try:
+            count = catalog_io.apply(_from_session(payload), request.session.pop(SESSION_KEY + ":pub", False))
+        except (KeyError, ValueError, IntegrityError) as exc:
+            messages.error(request, f"Импорт не выполнен, каталог не изменён: {exc}")
+            return redirect("admin:catalog_motorcycle_import")
         messages.success(request, f"Импорт выполнен: обработано моделей — {count}.")
         return redirect("admin:catalog_motorcycle_changelist")
 

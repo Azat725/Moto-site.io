@@ -86,11 +86,25 @@
     state = DEFAULTS; render(true);
   });
   if (form) form.addEventListener("submit", function (e) { e.preventDefault(); });
+  var moreBtn = document.querySelector(".toolbar__more-btn");
+  var more = document.getElementById("toolbar-more");
+  if (moreBtn && more) moreBtn.addEventListener("click", function () {
+    var open = moreBtn.getAttribute("aria-expanded") !== "true";
+    moreBtn.setAttribute("aria-expanded", String(open));
+    more.classList.toggle("is-open", open);
+  });
 
+  /* Параметры из адреса принимаем, только если такое значение реально есть в фильтрах. */
+  function allowed(value, values, fallback) { return values.indexOf(value) !== -1 ? value : fallback; }
+  function chipValues(kind) { return chips.filter(function (c) { return c.dataset.filter === kind; }).map(function (c) { return c.dataset.value; }); }
+  function optionValues(select) { return select ? Array.prototype.map.call(select.options, function (o) { return o.value; }) : []; }
   var qs = new URLSearchParams(location.search);
   var initial = {
-    type: qs.get("type") || "all", power: qs.get("power") || "", line: qs.get("line") || "all",
-    q: qs.get("q") || "", sort: qs.get("sort") || "default"
+    type: allowed(qs.get("type") || "all", chipValues("type"), "all"),
+    power: allowed(qs.get("power") || "", chipValues("power"), ""),
+    line: allowed(qs.get("line") || "all", optionValues(line), "all"),
+    q: (qs.get("q") || "").slice(0, 60),
+    sort: allowed(qs.get("sort") || "default", optionValues(sort), "default")
   };
   if (search) search.value = initial.q;
   if (line) line.value = initial.line;

@@ -43,7 +43,7 @@ def _rows_from_xlsx(data: bytes) -> list[list]:
             raise CatalogError("Файл Excel слишком большой после распаковки")
     workbook = load_workbook(io.BytesIO(data), read_only=True, data_only=True)
     sheet = workbook["Каталог"] if "Каталог" in workbook.sheetnames else workbook.worksheets[0]
-    rows = [list(row) for row in sheet.iter_rows(values_only=True, max_row=MAX_ROWS + 1)]
+    rows = [list(row) for row in sheet.iter_rows(values_only=True, max_row=MAX_ROWS + 2)]
     workbook.close()
     return rows
 
@@ -55,7 +55,7 @@ def _rows_from_csv(data: bytes) -> list[list]:
         text = data.decode("cp1251")
     first = text.splitlines()[0] if text else ""
     delimiter = ";" if first.count(";") >= first.count(",") else ","
-    return [row for row in csv.reader(io.StringIO(text), delimiter=delimiter)][: MAX_ROWS + 1]
+    return [row for row in csv.reader(io.StringIO(text), delimiter=delimiter)][: MAX_ROWS + 2]
 
 
 def read_table(data: bytes) -> list[dict]:
@@ -64,6 +64,8 @@ def read_table(data: bytes) -> list[dict]:
     rows = _rows_from_xlsx(data) if data[:4] == b"PK\x03\x04" else _rows_from_csv(data)
     if not rows:
         raise CatalogError("Пустой файл")
+    if len(rows) > MAX_ROWS + 1:
+        raise CatalogError(f"В файле больше {MAX_ROWS} строк — разделите его на части")
     header = [_header_key(c) for c in rows[0]]
     result = []
     for values in rows[1:]:
@@ -89,7 +91,9 @@ def rows_to_models(rows: list[dict]) -> list[dict]:
                 "sort": row.get("sort") or 100, "short": row.get("short") or "",
                 "description": row.get("description") or "", "features": row.get("features") or "",
                 "specs": {k: row.get(k) for k in SPEC_FIELDS},
-                "options": {k[4:]: v for k, v in row.items() if k.startswith("opt:") and v not in (None, "", "-", "нет")},
+                "options": ({k[4:]: v for k, v in row.items() if k.startswith("opt:")}
+                            if any(k.startswith("opt:") for k in row) else None),
+                "option_scope": [k[4:] for k in row if k.startswith("opt:")] or None,
                 "variants": [], "colors": None,
             }
             grouped[slug] = model

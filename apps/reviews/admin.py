@@ -12,10 +12,10 @@ class ReviewAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at", "consent_at", "publication_consent_at", "moderated_at")
     actions = ["approve", "reject"]
 
-    @admin.action(description="Опубликовать")
+    @admin.action(description="Опубликовать", permissions=["change"])
     def approve(self, request, queryset):
-        queryset.update(status=Review.Status.APPROVED, moderated_at=timezone.now())
+        queryset.update(status=Review.Status.APPROVED, moderated_at=timezone.now(), ip_hash="")
 
-    @admin.action(description="Отклонить")
+    @admin.action(description="Отклонить", permissions=["change"])
     def reject(self, request, queryset):
-        queryset.update(status=Review.Status.REJECTED, moderated_at=timezone.now())
+        queryset.update(status=Review.Status.REJECTED, moderated_at=timezone.now(), ip_hash="")

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 import time
+import unicodedata
 
 from django import forms
 from django.conf import settings
@@ -19,6 +20,7 @@ TOKEN_SALT = "ivax.lead-form"
 
 def valid_person_name(value: str, max_len: int) -> bool:
     """Буквы любого алфавита (включая татарские Ә Ө Ү Җ Ң Һ), пробел, дефис, апостроф, точка."""
+    value = unicodedata.normalize("NFC", value)
     return 2 <= len(value) <= max_len and value[0].isalpha() and all(ch.isalpha() or ch in NAME_EXTRA for ch in value)
 
 
@@ -38,14 +40,18 @@ def issue_form_token() -> str:
     return signing.TimestampSigner(salt=TOKEN_SALT).sign(str(int(time.time())))
 
 
-def filled_too_fast(token: str) -> bool:
-    """True только если подписанная метка валидна и форма заполнена быстрее порога (бот)."""
+def looks_automated(token: str) -> bool:
+    """Нет метки, подделанная метка или форма заполнена быстрее порога — похоже на бота.
+    Устаревшая (вкладка открыта больше недели) метка — не повод считать спамом."""
     if not token:
-        return False
+        return True
+    signer = signing.TimestampSigner(salt=TOKEN_SALT)
     try:
-        issued = int(signing.TimestampSigner(salt=TOKEN_SALT).unsign(token, max_age=7 * 86400))
-    except (signing.BadSignature, ValueError):
+        issued = int(signer.unsign(token, max_age=7 * 86400))
+    except signing.SignatureExpired:
         return False
+    except (signing.BadSignature, ValueError):
+        return True
     return time.time() - issued < settings.LEAD_MIN_FILL_SECONDS
 
 
@@ -58,7 +64,7 @@ class LeadForm(forms.Form):
     consent = forms.BooleanField(
         required=True, error_messages={"required": "Без согласия на обработку персональных данных заявку не принять."}
     )
-    model = forms.CharField(max_length=60, required=False)
+    model = forms.SlugField(max_length=60, required=False)
     variant = forms.IntegerField(min_value=1, required=False)
     options = forms.CharField(max_length=600, required=False)
     color = forms.CharField(max_length=40, required=False)
@@ -68,7 +74,7 @@ class LeadForm(forms.Form):
     website = forms.CharField(required=False)  # honeypot: люди это поле не видят
 
     def clean_name(self) -> str:
-        name = " ".join(self.cleaned_data["name"].split())
+        name = unicodedata.normalize("NFC", " ".join(self.cleaned_data["name"].split()))
         if not valid_person_name(name, 80):
             raise forms.ValidationError("Введите имя буквами (от 2 символов).")
         return name
@@ -93,7 +99,7 @@ class LeadForm(forms.Form):
 
     def clean(self):
         data = super().clean()
-        data["is_spam"] = bool(data.get("website")) or filled_too_fast(data.get("form_token", ""))
+        data["is_spam"] = bool(data.get("website")) or looks_automated(data.get("form_token", ""))
         slug = (data.get("model") or "").strip().lower()
         data["model"] = slug
         data["motorcycle"] = Motorcycle.objects.filter(slug=slug, is_published=True).first() if slug else None

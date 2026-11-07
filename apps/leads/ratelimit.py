@@ -1,25 +1,35 @@
-"""Ограничение частоты запросов по хэшу IP (кэш Django: на сервере — файловый, общий для всех воркеров)."""
+"""IP посетителя и ограничение частоты заявок/отзывов (счёт по БД — работает с несколькими воркерами)."""
+from __future__ import annotations
+
+import ipaddress
+from datetime import timedelta
+
 from django.conf import settings
-from django.core.cache import cache
+from django.utils import timezone
 
 
 def client_ip(request) -> str:
-    """IP посетителя. За обратным прокси (Caddy/nginx) берём заголовок, который выставляет сам прокси."""
-    if settings.TRUSTED_PROXY:
-        forwarded = request.META.get("HTTP_X_REAL_IP") or request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0]
-        if forwarded.strip():
-            return forwarded.strip()
-    return request.META.get("REMOTE_ADDR", "")
+    """IP посетителя. Заголовку X-Real-IP верим, только если запрос пришёл от нашего прокси (Caddy)."""
+    remote = request.META.get("REMOTE_ADDR", "")
+    if settings.TRUSTED_PROXY and remote in settings.TRUSTED_PROXY_IPS:
+        real = request.META.get("HTTP_X_REAL_IP", "").strip()
+        if real:
+            return real
+    return remote
 
 
-def hit(key: str, limit: int, window_seconds: int) -> bool:
-    """Регистрирует запрос. Возвращает False, если лимит превышен."""
-    cache_key = f"rl:{key}"
-    if cache.add(cache_key, 1, window_seconds):
-        return True
+def limit_key(ip: str) -> str:
+    """Для IPv6 считаем всю сеть /64 (у одного абонента их миллиарды адресов)."""
     try:
-        count = cache.incr(cache_key)
+        address = ipaddress.ip_address(ip)
     except ValueError:
-        cache.set(cache_key, 1, window_seconds)
-        return True
-    return count <= limit
+        return ip
+    if address.version == 6:
+        return str(ipaddress.ip_network(f"{ip}/64", strict=False))
+    return ip
+
+
+def over_limit(queryset, limit: int, window_seconds: int) -> bool:
+    """True, если за окно уже было limit или больше записей (queryset отфильтрован по ip_hash)."""
+    since = timezone.now() - timedelta(seconds=window_seconds)
+    return queryset.filter(created_at__gte=since).count() >= limit

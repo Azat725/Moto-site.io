@@ -6,7 +6,6 @@ from django.utils import timezone
 from django.utils.html import format_html_join
 
 from .models import Lead, Outbox
-from .delivery import deliver
 from .services import anonymize_leads
 
 FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
@@ -50,20 +49,23 @@ class LeadAdmin(admin.ModelAdmin):
         rows = [(k, v if not isinstance(v, list) else ", ".join(v)) for k, v in cfg.items() if v not in ("", None, [])]
         return format_html_join("\n", "<div><b>{}</b>: {}</div>", rows) or "—"
 
-    @admin.action(description="Отметить «В работе»")
+    def has_export_permission(self, request):
+        return request.user.has_perm("leads.export_lead")
+
+    @admin.action(description="Отметить «В работе»", permissions=["change"])
     def mark_in_progress(self, request, queryset):
         queryset.update(status=Lead.Status.IN_PROGRESS)
 
-    @admin.action(description="Отметить «Завершена»")
+    @admin.action(description="Отметить «Завершена»", permissions=["change"])
     def mark_done(self, request, queryset):
         queryset.update(status=Lead.Status.DONE)
 
-    @admin.action(description="Обезличить (удалить персональные данные)")
+    @admin.action(description="Обезличить (удалить персональные данные)", permissions=["delete"])
     def anonymize(self, request, queryset):
         count = anonymize_leads(queryset)
         self.message_user(request, f"Обезличено заявок: {count}", messages.SUCCESS)
 
-    @admin.action(description="Выгрузить в CSV (Excel)")
+    @admin.action(description="Выгрузить в CSV (Excel)", permissions=["export"])
     def export_csv(self, request, queryset):
         response = HttpResponse(content_type="text/csv; charset=utf-8")
         response["Content-Disposition"] = 'attachment; filename="leads.csv"'
@@ -92,11 +94,14 @@ class OutboxAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
-    @admin.action(description="Повторить отправку сейчас")
+    @admin.action(description="Повторить отправку сейчас", permissions=["change"])
     def retry_now(self, request, queryset):
         ids = list(queryset.exclude(status=Outbox.Status.SENT).values_list("pk", flat=True))
         Outbox.objects.filter(pk__in=ids, status=Outbox.Status.DEAD).update(
             status=Outbox.Status.PENDING, next_attempt_at=timezone.now(), attempts=0)
         Outbox.objects.filter(pk__in=ids, status=Outbox.Status.PENDING).update(next_attempt_at=timezone.now())
-        ok = sum(deliver(pk) for pk in ids)
-        self.message_user(request, f"Отправлено: {ok} из {len(ids)}", messages.INFO)
+        self.message_user(request, f"Поставлено в очередь: {len(ids)}. Отправитель обработает их в течение нескольких секунд.",
+                          messages.INFO)
+
+    def has_delete_permission(self, request, obj=None):
+        return False

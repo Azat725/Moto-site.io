@@ -11,7 +11,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from .models import Rate
-from .parsers import ParsedRate, RateParseError, parse_cbr_json, parse_cbr_xml
+from .parsers import MAX_RESPONSE_BYTES, ParsedRate, RateParseError, parse_cbr_json, parse_cbr_xml
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +33,16 @@ class RefreshResult:
 
 def _fetch(url: str, params: dict | None = None) -> bytes:
     conf = settings.RATES
-    response = requests.get(url, params=params, timeout=conf["TIMEOUT"], headers={"User-Agent": "ivax-moto-rate/1.0"})
-    response.raise_for_status()
-    return response.content
+    with requests.get(url, params=params, timeout=conf["TIMEOUT"], stream=True,
+                      headers={"User-Agent": "ivax-moto-rate/1.0"}) as response:
+        response.raise_for_status()
+        chunks, size = [], 0
+        for chunk in response.iter_content(65536):
+            size += len(chunk)
+            if size > MAX_RESPONSE_BYTES:
+                raise RateParseError("Слишком большой ответ источника курса")
+            chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def fetch_from_source(source: str) -> ParsedRate:

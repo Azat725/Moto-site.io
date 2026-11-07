@@ -7,9 +7,10 @@
     <div class="chips" role="group" aria-label="Мощность">
       {% for p in facets.powers %}<button class="chip" type="button" data-filter="power" data-value="{{ p }}" aria-pressed="false">{{ p }} кВт</button>{% endfor %}
     </div>
+    <button class="chip toolbar__more-btn" type="button" aria-expanded="false" aria-controls="toolbar-more">Ещё фильтры</button>
     <span class="toolbar__count" id="catalog-count" aria-live="polite"></span>
   </div>
-  <div class="toolbar__row">
+  <div class="toolbar__row toolbar__row--more" id="toolbar-more">
     <div class="field"><label for="f-search">Поиск</label><input id="f-search" type="search" placeholder="Поиск по модели…" autocomplete="off"></div>
     <div class="field"><label for="f-line">Линейка</label>
       <select id="f-line"><option value="all">Все линейки</option>{% for l in facets.lines %}<option value="{{ l }}">Линейка {{ l }}</option>{% endfor %}</select></div>

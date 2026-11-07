@@ -35,6 +35,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "apps.pages.middleware.PublicUploadGuardMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -77,7 +78,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": DATA_DIR / "db.sqlite3",
         "OPTIONS": {"timeout": 20, "transaction_mode": "IMMEDIATE",
-                    "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;"},
+                    "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA secure_delete=ON;"},
     }
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -104,9 +105,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = Path(env("MEDIA_ROOT", str(BASE_DIR / "media")))
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+DATA_UPLOAD_MAX_NUMBER_FILES = 20
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
 
-# Файловый кэш общий для всех воркеров gunicorn (лимиты частоты заявок)
+# Файловый кэш общий для всех воркеров gunicorn (лимиты заявок считаются по БД, кэш — для прочего)
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
                       "LOCATION": str(DATA_DIR / "cache")}}
 
@@ -135,8 +137,7 @@ AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = timedelta(minutes=15)
 AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 AXES_RESET_ON_SUCCESS = True
-AXES_IPWARE_PROXY_COUNT = 1 if env_bool("TRUSTED_PROXY", False) else 0
-AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_REAL_IP", "REMOTE_ADDR"]
+AXES_CLIENT_IP_CALLABLE = "apps.leads.ratelimit.client_ip"
 
 # --- Сайт ---
 ADMIN_PATH = env("ADMIN_PATH", "manage-ivax/").strip("/") + "/"
@@ -163,6 +164,7 @@ RATES = {
 IP_HASH_SALT = env("IP_HASH_SALT", "dev-salt")
 # true — сайт за Caddy/nginx: IP берём из X-Real-IP (прокси обязан его выставлять)
 TRUSTED_PROXY = env_bool("TRUSTED_PROXY", False)
+TRUSTED_PROXY_IPS = env_list("TRUSTED_PROXY_IPS", ["127.0.0.1", "::1"])
 LEAD_RATE_LIMIT = (env_int("LEAD_RATE_LIMIT_COUNT", 5), env_int("LEAD_RATE_LIMIT_SECONDS", 600))
 REVIEW_RATE_LIMIT = (env_int("REVIEW_RATE_LIMIT_COUNT", 3), env_int("REVIEW_RATE_LIMIT_SECONDS", 86400))
 LEAD_MIN_FILL_SECONDS = env_int("LEAD_MIN_FILL_SECONDS", 3)
@@ -202,6 +204,8 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": env("LOG_LEVEL", "INFO")},
+    # urllib3 на уровне DEBUG пишет URL запросов — в них токен Telegram-бота
+    "loggers": {"urllib3": {"level": "WARNING"}},
 }
 
 # --- Оформление ---

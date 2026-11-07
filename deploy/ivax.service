@@ -1,5 +1,6 @@
 # /etc/systemd/system/ivax.service — веб-приложение (gunicorn за Caddy)
 [Unit]
+StartLimitIntervalSec=0
 Description=IV&AX MOTO (gunicorn)
 After=network.target
 
@@ -11,6 +12,8 @@ EnvironmentFile=/srv/ivax/app/.env
 Environment=DJANGO_SETTINGS_MODULE=config.settings.prod
 ExecStart=/srv/ivax/app/.venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 30 --max-requests 1000 --max-requests-jitter 100
 Restart=always
+RestartSec=5
+UMask=0027
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true

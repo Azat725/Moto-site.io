@@ -35,8 +35,7 @@ def build_configuration(data: dict) -> tuple[dict, int | None]:
     """Снимок конфигурации и итоговая цена. Ошибки не прерывают сохранение заявки."""
     moto = data.get("motorcycle")
     if moto is None:
-        slug = data.get("model") or ""
-        return ({"error": f"Модель «{slug}» не найдена или снята с публикации"} if slug else {}), None
+        return ({"error": "Модель не найдена или снята с публикации — уточните у клиента"} if data.get("model") else {}), None
     ctx = current_context()
     base = {"rate": str(ctx.rate), "rate_date": ctx.rate_date.isoformat() if ctx.rate_date else "",
             "rate_source": ctx.rate_source, "markup_rub": ctx.markup_rub, "step": ctx.step,
@@ -49,8 +48,10 @@ def build_configuration(data: dict) -> tuple[dict, int | None]:
         result = quote(moto, ctx, variant_id, data.get("options") or ())
     except QuoteError as exc:
         return base | {"error": f"Конфигурацию нужно уточнить: {exc}"}, None
+    on_request_options = [o.option.name for o in result.options if o.price_usd is None]
     return base | {"variant": result.variant.label, "options": [o.option.name for o in result.options],
-                   "on_request": result.on_request}, result.total_rub
+                   "options_on_request": on_request_options,
+                   "on_request": result.on_request or bool(on_request_options)}, result.total_rub
 
 
 def create_lead(data: dict, ip: str) -> Lead:
@@ -66,7 +67,7 @@ def create_lead(data: dict, ip: str) -> Lead:
             message=data.get("message", ""),
             contact_way=data.get("way") or Lead.Way.CALL,
             motorcycle=moto,
-            model_name=moto.name if moto else (data.get("model") or "")[:80],
+            model_name=moto.name if moto else "",
             config=config,
             total_rub=total,
             consent_at=timezone.now(),
@@ -97,5 +98,5 @@ def anonymize_leads(queryset) -> int:
         ids = list(queryset.values_list("pk", flat=True))
         Outbox.objects.filter(lead_id__in=ids).update(body="[обезличено]")
         return Lead.objects.filter(pk__in=ids).update(
-            name="—", phone="—", message="", ip_hash="", anonymized_at=timezone.now()
+            name="—", phone="—", message="", manager_note="", ip_hash="", anonymized_at=timezone.now()
         )

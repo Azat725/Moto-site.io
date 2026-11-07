@@ -95,7 +95,7 @@ def static_page(request, page: str):
         raise Http404
     template, title = STATIC_PAGES[page]
     context = {"page_key": page, "page_title": title, "noindex": page in NOINDEX_PAGES,
-               "jsonld": [seo.breadcrumbs([(title, request.path_info)])]}
+               "jsonld": [seo.breadcrumbs([(title, request.path)])]}
     if page == "contacts":
         context["jsonld"].append(seo.dealer(SiteSettings.load()))
     if page == "preview_logo":
@@ -108,6 +108,6 @@ def robots_txt(request):
     if settings.SITE_NOINDEX:
         body = "User-agent: *\nDisallow: /\n"
     else:
-        body = (f"User-agent: *\nAllow: /\nDisallow: /{settings.ADMIN_PATH}\nDisallow: /api/\n"
+        body = ("User-agent: *\nAllow: /\nDisallow: /api/\n"
                 f"Disallow: /preview/\nDisallow: /thanks/\n\nSitemap: {settings.SITE_DOMAIN}/sitemap.xml\n")
     return HttpResponse(body, content_type="text/plain; charset=utf-8")

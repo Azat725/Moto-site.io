@@ -5,7 +5,8 @@ import json
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
-from xml.etree import ElementTree
+from defusedxml import ElementTree
+from defusedxml.common import DefusedXmlException
 
 MAX_RESPONSE_BYTES = 512 * 1024
 
@@ -24,9 +25,12 @@ class ParsedRate:
 
 def _decimal(text: str) -> Decimal:
     try:
-        return Decimal(text.strip().replace(",", "."))
+        value = Decimal(text.strip().replace(",", "."))
     except (InvalidOperation, AttributeError) as exc:
         raise RateParseError(f"Некорректное число: {text!r}") from exc
+    if not value.is_finite():
+        raise RateParseError(f"Некорректное число: {text!r}")
+    return value
 
 
 def parse_cbr_xml(payload: bytes, currency: str = "USD") -> ParsedRate:
@@ -36,8 +40,8 @@ def parse_cbr_xml(payload: bytes, currency: str = "USD") -> ParsedRate:
     if b"<!DOCTYPE" in payload.upper() or b"<!ENTITY" in payload.upper():
         raise RateParseError("DTD в ответе запрещён")
     try:
-        root = ElementTree.fromstring(payload)
-    except ElementTree.ParseError as exc:
+        root = ElementTree.fromstring(payload, forbid_dtd=True)
+    except (ElementTree.ParseError, DefusedXmlException) as exc:
         raise RateParseError("Некорректный XML") from exc
     try:
         effective = datetime.strptime(root.attrib["Date"], "%d.%m.%Y").date()

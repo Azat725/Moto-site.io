@@ -167,3 +167,24 @@
 .cfg-option__name { min-width: 0; overflow-wrap: anywhere; }
 
 body[data-page="model"] .gauge { bottom: 120px; }
+
+/* Фото поставщика на белом фоне — делаем подложку белой, чтобы не было видно рамки кадра */
+.bike-card__art--photo, .gallery__main--photo { background: #fff; }
+
+/* Мобильный каталог: карточки видны сразу — чипы в одну прокручиваемую строку, остальное по кнопке */
+.toolbar__more-btn { display: none; }
+@media (max-width: 720px) {
+  .shop-hero { padding-bottom: 8px; }
+  .shop-hero__facts { display: none; }
+  .shop-hero .hero__tag { display: none; }
+  .toolbar { padding: 10px; gap: 8px; margin-bottom: 16px; }
+  .toolbar__row:first-child { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -10px; padding: 0 10px; }
+  .toolbar__row:first-child::-webkit-scrollbar { display: none; }
+  .toolbar .chips { flex-wrap: nowrap; }
+  .toolbar .chip { flex: none; min-height: 38px; padding: 0.4em 0.9em; }
+  .toolbar__more-btn { display: inline-flex; align-items: center; flex: none; }
+  .toolbar__count { display: none; }
+  .toolbar__row--more { display: none; }
+  .toolbar__row--more.is-open { display: flex; }
+  .section--catalog { padding-top: 10px; }
+}

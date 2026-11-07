@@ -52,7 +52,7 @@
         <label class="cfg-option{% if o.included %} is-included{% endif %}">
           <input type="checkbox" name="cfg-option" value="{{ o.code }}" {% if o.included %}checked disabled{% endif %}>
           <span class="cfg-option__body"><span class="cfg-option__name">{{ o.name }}{% if o.description %}<small>{{ o.description }}</small>{% endif %}</span>
-            <span class="cfg-option__price">{% if o.included %}в комплектации{% elif o.plus_rub %}+{{ o.plus_rub|rub }}{% else %}по запросу{% endif %}</span></span>
+            <span class="cfg-option__price">{% if o.included %}в комплектации{% elif o.on_request %}по запросу{% elif o.plus_rub %}+{{ o.plus_rub|rub }}{% else %}без доплаты{% endif %}</span></span>
         </label>
         {% endfor %}
       </fieldset>
@@ -68,7 +68,8 @@
         </div>
       </fieldset>
 
-      <div class="cfg-total" aria-live="polite">
+      <span class="sr-only" aria-live="polite" id="cfg-total-sr"></span>
+      <div class="cfg-total">
         <div><small>Итого</small><b id="cfg-total">{{ offer.variants.0.price_rub|rub }}</b></div>
         <a class="btn" href="#order" data-magnetic id="cfg-order">Отправить заявку менеджеру {% icon "arrow" "arrow" %}</a>
       </div>

@@ -1,0 +1,10 @@
+# /etc/systemd/system/ivax-purge.timer — ежедневно в 04:15
+[Unit]
+Description=IV&AX MOTO purge timer
+
+[Timer]
+OnCalendar=*-*-* 04:15:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

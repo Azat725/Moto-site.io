@@ -1,3 +1,5 @@
+import unicodedata
+
 from django import forms
 
 from apps.catalog.models import Motorcycle
@@ -17,7 +19,7 @@ class ReviewForm(forms.Form):
     website = forms.CharField(required=False)
 
     def clean_display_name(self) -> str:
-        name = " ".join(self.cleaned_data["display_name"].split())
+        name = unicodedata.normalize("NFC", " ".join(self.cleaned_data["display_name"].split()))
         if not valid_person_name(name, 40):
             raise forms.ValidationError("Имя — буквами, от 2 символов.")
         return name

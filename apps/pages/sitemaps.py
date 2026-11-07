@@ -1,10 +1,22 @@
+from urllib.parse import urlsplit
+
+from django.conf import settings
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 
 from apps.catalog.models import Motorcycle
 
 
-class StaticSitemap(Sitemap):
+class SiteSitemap(Sitemap):
+    """Домен и протокол берём из SITE_DOMAIN, а не из запроса (иначе в экспорте будет testserver)."""
+
+    protocol = "https"
+
+    def get_domain(self, site=None):
+        return urlsplit(settings.SITE_DOMAIN).netloc
+
+
+class StaticSitemap(SiteSitemap):
     changefreq = "weekly"
 
     def items(self):
@@ -18,7 +30,7 @@ class StaticSitemap(Sitemap):
         return {"pages:home": 1.0, "pages:catalog": 0.9}.get(item, 0.4)
 
 
-class MotorcycleSitemap(Sitemap):
+class MotorcycleSitemap(SiteSitemap):
     changefreq = "weekly"
     priority = 0.8
 

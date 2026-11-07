@@ -43,6 +43,7 @@ class Lead(models.Model):
         verbose_name = "Заявка"
         verbose_name_plural = "Заявки"
         ordering = ["-created_at"]
+        permissions = [("export_lead", "Выгрузка заявок с персональными данными")]
 
     def __str__(self) -> str:
         return f"Заявка №{self.pk} — {self.model_name or self.get_kind_display()}"

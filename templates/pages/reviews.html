@@ -19,7 +19,7 @@
       <h2>Оставить отзыв</h2>
       <form class="form" data-review-form method="post" action="{% url 'reviews:submit' %}" novalidate>
         {% if site_mode == "live" %}{% csrf_token %}{% endif %}
-        {% if request.GET.sent %}<div class="form-status is-ok">Спасибо! Отзыв появится после проверки.</div>{% endif %}
+        {% if request.GET.sent %}<div class="form-status is-ok">Спасибо! Отзыв появится после проверки.</div>{% elif request.GET.error %}<div class="form-status is-err">Отзыв не отправлен: проверьте поля и отметьте оба согласия.</div>{% endif %}
         <div class="form__row">
           <div class="field"><label for="r-name">Имя</label><input id="r-name" name="display_name" required maxlength="40" autocomplete="given-name"><span class="field__error">Укажите имя</span></div>
           <div class="field"><label for="r-city">Город (необязательно)</label><input id="r-city" name="city" maxlength="40" autocomplete="address-level2"></div>

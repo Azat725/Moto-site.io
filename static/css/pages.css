@@ -1,13 +1,5 @@
 /* Страничные стили */
 
-/* ---------- Векторный мотоцикл (классы работают и внутри <use>) ---------- */
-.bk-d { fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
-.bk-body { fill: var(--bike-fill, #1a1a1f); }
-.bk-tyre { stroke-width: 10; }
-.bk-thin { stroke-width: 2; opacity: 0.7; }
-.bk-acc { fill: var(--red); stroke: none; }
-.bk-accs { stroke: var(--red); stroke-width: 5; }
-
 /* ---------- HERO ---------- */
 .hero {
   position: relative;
@@ -44,56 +36,25 @@
 .hero h1 .outline-text { display: block; -webkit-text-stroke-color: var(--red-hot); }
 .hero__lead { max-width: 54ch; color: #d6d6da; font-size: var(--fs-lg); margin-bottom: 30px; }
 .hero__actions { display: flex; flex-wrap: wrap; gap: 14px; }
-.hero__meta { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 34px 0 0; padding: 0; list-style: none; color: var(--gray); font-size: 0.9rem; }
-.hero__meta li { display: flex; align-items: center; gap: 8px; }
-.hero__meta svg { width: 18px; height: 18px; color: var(--red-hot); }
 
 .hero__stage { position: relative; width: 100%; }
-.hero__stage .hero-bike { position: relative; width: 120%; max-width: none; margin-left: -10%; filter: drop-shadow(0 30px 40px rgba(0, 0, 0, 0.6)); }
 .hero__ring {
   position: absolute; inset: 4% 8% auto auto; width: 70%; aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(closest-side, rgba(225, 6, 0, 0.55), rgba(225, 6, 0, 0) 72%);
   z-index: -1;
 }
-.road { position: absolute; left: -10%; right: -10%; bottom: 8.4%; height: 3px; overflow: hidden; }
-.road::before {
-  content: ""; position: absolute; inset: 0 -120px 0 0;
-  background: repeating-linear-gradient(90deg, var(--red) 0 56px, transparent 56px 120px);
-  animation: road 0.9s linear infinite;
-}
-@keyframes road { to { transform: translate3d(-120px, 0, 0); } }
 
-.hero__chip {
-  position: absolute; z-index: 3;
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 16px; border-radius: 999px;
-  background: rgba(23, 23, 26, 0.85); border: 1px solid var(--line);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  font-size: 0.82rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  animation: floaty 5s ease-in-out infinite;
-  animation-delay: var(--fd, 0s);
-}
-.hero__chip b { color: var(--red-hot); font-family: var(--font-display); font-size: 1.1rem; }
-.hero__chip--1 { top: 6%; left: 2%; }
-.hero__chip--2 { top: 20%; right: 0; --fd: -1.5s; }
-.hero__chip--3 { bottom: 20%; left: 8%; --fd: -3s; }
 @keyframes floaty { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -12px, 0); } }
 
-.scroll-hint { position: absolute; left: 50%; bottom: 22px; width: 26px; height: 42px; margin-left: -13px; border: 2px solid rgba(255, 255, 255, 0.45); border-radius: 14px; }
 .hero__layer { will-change: transform; }
 
 @media (max-width: 960px) {
   .hero { align-items: start; }
   .hero__grid { grid-template-columns: minmax(0, 1fr); }
   .hero__stage { order: -1; margin-top: 4px; }
-  .hero__stage .hero-bike { width: 104%; margin-left: -2%; }
-  .hero__chip--2 { right: 2%; }
-  .scroll-hint { display: none; }
 }
 @media (max-width: 520px) {
-  .hero__chip { padding: 7px 11px; font-size: 0.7rem; }
-  .hero__chip--3 { display: none; }
   .hero__actions .btn { flex: 1 1 100%; }
 }
 
@@ -120,13 +81,6 @@
 /* ---------- Блок «О салоне» ---------- */
 .split-section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 80px); align-items: center; }
 .split-section--top { align-items: start; }
-.visual-box {
-  position: relative; aspect-ratio: 4 / 3; border-radius: calc(var(--radius) + 6px); overflow: hidden;
-  background: radial-gradient(70% 80% at 70% 20%, rgba(225, 6, 0, 0.55), transparent 70%), linear-gradient(160deg, #222226, #0d0d0f);
-  display: grid; place-items: center; border: 1px solid var(--line);
-}
-.visual-box svg.bike { width: 86%; color: var(--white); }
-.visual-box .tag { position: absolute; left: 16px; bottom: 16px; font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gray); }
 .check-list { list-style: none; display: grid; gap: 12px; margin: 22px 0 0; }
 .check-list li { position: relative; padding-left: 36px; }
 .check-list li::before {
@@ -159,20 +113,13 @@
   border-radius: calc(var(--radius) + 6px); border: 1px solid var(--line);
   background: radial-gradient(70% 90% at 70% 10%, rgba(225, 6, 0, 0.5), transparent 70%), linear-gradient(160deg, #202024, #0c0c0e);
 }
-.gallery__main svg.bike { width: 90%; color: var(--white); animation: floaty 6s ease-in-out infinite; }
 .gallery__note { position: absolute; left: 16px; bottom: 14px; margin: 0; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray); }
-.product__info { position: sticky; top: calc(var(--header-h) + 20px); display: grid; gap: 18px; }
-.product__info h1 { font-size: clamp(2rem, 3.6vw + 0.6rem, 3.2rem); margin: 0; }
-.product__price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
-.product__price b { font-family: var(--font-display); font-size: clamp(2.2rem, 4vw, 3.2rem); line-height: 1; }
-.product__price small { color: var(--gray); }
-.product__actions { display: grid; gap: 12px; }
 .mini-specs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .mini-specs div { padding: 14px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); text-align: center; background: var(--surface); }
 .mini-specs b { display: block; font-family: var(--font-display); font-size: 1.5rem; line-height: 1.1; }
 .mini-specs span { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray); }
 .product__disclaimer { font-size: 0.8rem; color: var(--gray); margin: 0; }
-@media (max-width: 900px) { .product { grid-template-columns: minmax(0, 1fr); } .product__info { position: static; } }
+@media (max-width: 900px) { .product { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---------- Контакты ---------- */
 .contact-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 3vw, 40px); }
@@ -204,16 +151,8 @@
 .contact-way input:focus-visible + span { outline: 3px solid var(--red-hot); outline-offset: 2px; }
 
 /* ---------- Юридические страницы ---------- */
-.legal-wrap { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: clamp(24px, 5vw, 72px); align-items: start; }
-.legal-toc { position: sticky; top: calc(var(--header-h) + 24px); padding: 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); font-size: 0.9rem; }
-.legal-toc b { display: block; margin-bottom: 8px; font-family: var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; }
-.legal-toc ol { list-style: none; display: grid; gap: 2px; }
-.legal-toc a { display: block; padding: 5px 0; color: var(--text-muted); text-decoration: none; }
-.legal-toc a:hover { color: var(--text); }
 .legal-meta { color: var(--gray); font-size: 0.9rem; margin-bottom: 28px; }
-@media (max-width: 900px) { .legal-wrap { grid-template-columns: minmax(0, 1fr); } .legal-toc { position: static; } }
 
 /* ---------- 404 ---------- */
 .e404 { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; text-align: center; padding: calc(var(--head-total) + 24px) var(--gutter) 64px; background: radial-gradient(60% 60% at 50% 40%, rgba(225, 6, 0, 0.35), transparent 70%), var(--black); }
 .e404 .big { font-family: var(--font-display); font-weight: 700; font-size: clamp(7rem, 30vw, 18rem); line-height: 0.9; color: transparent; -webkit-text-stroke: 3px var(--red-hot); }
-.e404 svg.bike { width: min(420px, 80vw); margin: -10px auto 18px; color: var(--white); animation: floaty 5s ease-in-out infinite; }

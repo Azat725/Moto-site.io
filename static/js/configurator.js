@@ -45,13 +45,15 @@
     });
   }
 
-  var shown = null, raf = 0;
+  var srEl = document.getElementById("cfg-total-sr");
+  var shown = null, raf = 0, timer = 0;
   function animateTo(value) {
+    cancelAnimationFrame(raf);
+    clearTimeout(timer);
     if (value === null) { totalEl.textContent = "по запросу"; shown = null; return; }
     if (reduce || shown === null) { totalEl.textContent = fmt(value); shown = value; return; }
-    cancelAnimationFrame(raf);
     var from = shown, t0 = performance.now();
-    setTimeout(function () { totalEl.textContent = fmt(value); shown = value; }, 420);
+    timer = setTimeout(function () { totalEl.textContent = fmt(value); shown = value; }, 420);
     (function step(now) {
       var p = Math.min(1, (now - t0) / 380), e = 1 - Math.pow(1 - p, 3);
       totalEl.textContent = fmt(Math.round((from + (value - from) * e) / cfg.step) * cfg.step);
@@ -64,6 +66,7 @@
     var s = selection();
     var total = computeTotal(cfg, s.variant, s.options);
     animateTo(total);
+    if (srEl) srEl.textContent = "Итого: " + (total === null ? "цена по запросу" : fmt(total));
     var parts = [s.variantLabel].concat(s.optionLabels.length ? ["опции: " + s.optionLabels.join(", ")] : [], s.colorLabel ? ["цвет: " + s.colorLabel] : []);
     if (summaryEl) summaryEl.textContent = parts.join("; ") + " — " + (total === null ? "цена по запросу" : fmt(total));
     if (leadForm) {

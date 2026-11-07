@@ -38,20 +38,18 @@ def rub(value) -> str:
 
 
 @register.filter
-def num(value) -> str:
-    return f"{int(value):,}".replace(",", NBSP) if value not in (None, "") else ""
-
-
-@register.filter
 def rate_fmt(value) -> str:
     return f"{value:.2f}".replace(".", ",") if value is not None else ""
 
 
 @register.simple_tag(takes_context=True)
 def abs_url(context, path: str = "") -> str:
+    from ..seo import site_origin
+
     request = context.get("request")
-    tail = path or (request.path_info if request else "/")
-    return settings.SITE_DOMAIN + tail
+    if path:
+        return settings.SITE_DOMAIN + path
+    return site_origin() + (request.path if request else "/")
 
 
 @register.simple_tag

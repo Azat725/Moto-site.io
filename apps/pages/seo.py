@@ -1,6 +1,8 @@
 """Структурированные данные schema.org (JSON-LD) для поисковиков."""
 from __future__ import annotations
 
+from urllib.parse import urlsplit
+
 from django.conf import settings
 from django.templatetags.static import static
 from django.urls import reverse
@@ -10,8 +12,14 @@ from apps.catalog.models import SiteSettings
 from .content import FAQ
 
 
+def site_origin() -> str:
+    """Схема и хост без пути: reverse() и static() сами добавляют префикс (/Moto-site.io в демо)."""
+    parts = urlsplit(settings.SITE_DOMAIN)
+    return f"{parts.scheme}://{parts.netloc}"
+
+
 def _abs(path: str) -> str:
-    return settings.SITE_DOMAIN + path
+    return site_origin() + path
 
 
 def dealer(site: SiteSettings) -> dict:

@@ -1,7 +1,23 @@
-# Caddy автоматически получает TLS-сертификат. Замените домен.
+# Caddy автоматически получает TLS-сертификат. Замените домен и путь админки (ADMIN_PATH из .env).
 ivax-moto.ru, www.ivax-moto.ru {
     encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
+    # Публичные формы — только короткий текст; большие тела разрешены лишь в админке (загрузка фото, импорт)
+    @admin path /ВАШ-ПУТЬ-АДМИНКИ/*
+    request_body @admin {
+        max_size 12MB
+    }
+    @public not path /ВАШ-ПУТЬ-АДМИНКИ/*
+    request_body @public {
+        max_size 64KB
+    }
     handle_path /media/* {
+        header Content-Security-Policy "default-src 'none'; img-src 'self'"
         root * /srv/ivax/media
         file_server
     }

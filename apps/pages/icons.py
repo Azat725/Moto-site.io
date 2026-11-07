@@ -32,7 +32,7 @@ LOGOS = {
     # Рогатый угловатый щит с ядром-молнией
     "horns": (
         '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'
-        '<path d="M4 2c4 10 8 14 16 16h24c8-2 12-6 16-16-1 12-4 18-8 22l-4 22-16 14-16-14-4-22C8 20 5 14 4 2z" fill="#0B0B0C"/>'
+        '<path d="M4 2c4 10 8 14 16 16h24c8-2 12-6 16-16-1 12-4 18-8 22l-4 22-16 14-16-14-4-22C8 20 5 14 4 2z" fill="#0B0B0C" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>'
         '<path d="M12 22h40l-4 22-16 12-16-12z" fill="#E10600"/>'
         '<path d="M34 24l-10 16h7l-3 12 12-17h-7l4-11z" fill="#fff"/></svg>'
     ),

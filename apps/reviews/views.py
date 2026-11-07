@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from apps.leads.ratelimit import client_ip, hit
+from apps.leads.ratelimit import client_ip, limit_key, over_limit
 from apps.leads.services import hash_ip
 
 from .forms import ReviewForm
@@ -22,7 +22,7 @@ def _respond(request, status: int, payload: dict):
 def submit(request):
     if settings.SITE_MODE != "live":
         return _respond(request, 403, {"success": False, "error": "Демо-версия сайта: отзывы не принимаются."})
-    ip_hash = hash_ip(client_ip(request))
+    ip_hash = hash_ip(limit_key(client_ip(request)))
     form = ReviewForm(request.POST)
     if not form.is_valid():
         if any(e.code == "spam" for e in form.non_field_errors().as_data()):
@@ -30,7 +30,7 @@ def submit(request):
         fields = {k: [str(e) for e in v] for k, v in form.errors.items() if k != "__all__"}
         return _respond(request, 400, {"success": False, "error": "Проверьте поля формы.", "fields": fields})
     limit, window = settings.REVIEW_RATE_LIMIT
-    if not hit(f"review:{ip_hash}", limit, window):
+    if over_limit(Review.objects.filter(ip_hash=ip_hash), limit, window):
         return _respond(request, 429, {"success": False, "error": "Слишком много отзывов с одного адреса."})
     data = form.cleaned_data
     now = timezone.now()

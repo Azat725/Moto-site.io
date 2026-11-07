@@ -1,5 +1,6 @@
 # /etc/systemd/system/ivax-notify.service — единственный отправитель уведомлений (Telegram, e-mail)
 [Unit]
+StartLimitIntervalSec=0
 Description=IV&AX MOTO notifications sender
 After=network.target
 
@@ -11,6 +12,8 @@ EnvironmentFile=/srv/ivax/app/.env
 Environment=DJANGO_SETTINGS_MODULE=config.settings.prod
 ExecStart=/srv/ivax/app/.venv/bin/python manage.py send_notifications --loop --interval 5
 Restart=always
+RestartSec=5
+UMask=0027
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true

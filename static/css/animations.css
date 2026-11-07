@@ -103,40 +103,10 @@
   animation-delay: var(--dl);
 }
 .speed-lines i:nth-child(3n) { background: linear-gradient(90deg, transparent, var(--red-hot)); height: 3px; }
-.hero.is-revving .speed-lines i { animation-duration: calc(var(--dur) / 3.5); opacity: 0.9; }
 @keyframes streak { to { transform: translate3d(calc(-100vw - var(--w) - 40px), 0, 0); } }
-
-.hero-bike { color: var(--white); }
-.hero-bike .bk-d {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-}
-.js.is-ready .hero-bike .bk-d {
-  animation: draw 2.4s var(--ease-in-out) forwards;
-  animation-delay: calc(0.3s + var(--k, 0) * 0.07s);
-}
-.hero-bike .bk-body { fill-opacity: 0; }
-.js.is-ready .hero-bike .bk-body { animation: fillIn 1s ease 2.4s forwards; }
-.hero-bike .bk-acc { opacity: 0; }
-.js.is-ready .hero-bike .bk-acc { animation: fillIn 0.8s ease 2.6s forwards; }
-@keyframes draw { to { stroke-dashoffset: 0; } }
-@keyframes fillIn { to { fill-opacity: 1; opacity: 1; } }
-.no-js .hero-bike .bk-d, html:not(.js) .hero-bike .bk-d { stroke-dasharray: none; stroke-dashoffset: 0; }
-html:not(.js) .hero-bike .bk-body { fill-opacity: 1; }
-html:not(.js) .hero-bike .bk-acc { opacity: 1; }
-
-.hero-bike .wheel { transform-box: fill-box; transform-origin: center; animation: spin 2.6s linear infinite; }
-.hero-bike .rig { animation: idle 0.14s ease-in-out infinite; }
-.hero-bike.is-revving .wheel { animation-duration: 0.35s; }
-.hero-bike.is-revving .rig { animation-duration: 0.05s; }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.4px); } }
 
 .hero-glow { animation: pulseGlow 4s ease-in-out infinite; }
 @keyframes pulseGlow { 0%, 100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
-
-.scroll-hint i { display: block; width: 4px; height: 8px; margin: 8px auto 0; border-radius: 2px; background: var(--red-hot); animation: scrollDot 1.8s var(--ease) infinite; }
-@keyframes scrollDot { 0% { transform: translateY(0); opacity: 1; } 80%, 100% { transform: translateY(16px); opacity: 0; } }
 
 /* ---------- Бегущая строка ---------- */
 .marquee { overflow: hidden; background: var(--red); color: var(--white); border-block: 1px solid rgba(0, 0, 0, 0.25); transform: rotate(-1.2deg) scale(1.02); margin-block: -8px; position: relative; z-index: 2; }
@@ -211,23 +181,18 @@ html:not(.js) .hero-bike .bk-acc { opacity: 1; }
 
 /* Фильтрация каталога */
 .bike-item { transition: opacity 0.45s var(--ease), transform 0.55s var(--ease); }
-.bike-item.is-hiding { opacity: 0; transform: scale(0.94) translateY(12px); }
 .bike-item[hidden] { display: none; }
 .bike-item.is-showing { animation: popIn 0.6s var(--spring) both; animation-delay: var(--sd, 0s); }
 @keyframes popIn { from { opacity: 0; transform: translateY(26px) scale(0.94); } }
 
 /* Слабые устройства / экономия данных: упрощаем */
 .is-lite .speed-lines, .is-lite .cursor, .is-lite .hero-glow { display: none; }
-.is-lite .hero-bike .rig { animation: none; }
 .is-lite .marquee { transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .js [data-reveal], .js .split .ch { opacity: 1 !important; transform: none !important; clip-path: none !important; }
   .preloader { display: none !important; }
   .speed-lines, .cursor, .hero-glow { display: none !important; }
-  .hero-bike .bk-d { stroke-dasharray: none; stroke-dashoffset: 0; animation: none !important; }
-  .hero-bike .bk-body { fill-opacity: 1; animation: none !important; }
-  .hero-bike .bk-acc { opacity: 1; animation: none !important; }
-  .hero-bike .wheel, .hero-bike .rig, .marquee__track, .pulse { animation: none !important; }
+  .marquee__track, .pulse { animation: none !important; }
   .marquee { transform: none; }
 }

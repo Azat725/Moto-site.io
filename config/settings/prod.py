@@ -8,6 +8,8 @@ if not SECRET_KEY or SECRET_KEY.startswith("dev-only") or len(SECRET_KEY) < 50:
     raise ImproperlyConfigured("Задайте DJANGO_SECRET_KEY (не короче 50 символов) в окружении.")
 if env("IP_HASH_SALT", "dev-salt") == "dev-salt":
     raise ImproperlyConfigured("Задайте IP_HASH_SALT в окружении.")
+if env("ADMIN_PATH", "manage-ivax/").strip("/") in ("manage-ivax", "admin", ""):
+    raise ImproperlyConfigured("Задайте свой ADMIN_PATH (случайная строка), стандартный путь админки публичен.")
 
 DEBUG = False
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

@@ -61,6 +61,8 @@ def to_decimal(value, where: str) -> Decimal | None:
         number = Decimal(str(value).replace(" ", "").replace(" ", "").replace(",", ".").replace("$", ""))
     except InvalidOperation as exc:
         raise CatalogError(f"{where}: «{value}» — не число") from exc
+    if not number.is_finite():
+        raise CatalogError(f"{where}: «{value}» — не число")
     if number < 0:
         raise CatalogError(f"{where}: цена не может быть отрицательной")
     return number.quantize(Decimal("0.01"))
@@ -106,12 +108,12 @@ def normalize_model(raw: dict, option_codes: set[str]) -> dict:
     variants = tuple(_normalize_variant(v, f"{where}, вариант {i + 1}") for i, v in enumerate(raw.get("variants", [])))
     if not variants:
         raise CatalogError(f"{where}: нужен хотя бы один вариант")
-    options = {}
-    for code, value in (raw.get("options") or {}).items():
-        if code not in option_codes:
-            raise CatalogError(f"{where}: неизвестная опция «{code}» (добавьте её в справочник опций)")
-        text = str(value).strip().lower()
-        options[code] = "included" if text in INCLUDED_WORDS else str(to_decimal(value, f"{where}, опция {code}"))
+    labels = [v["label"] for v in variants]
+    dupes = sorted({label for label in labels if labels.count(label) > 1})
+    if dupes:
+        raise CatalogError(f"{where}: повторяются названия вариантов: {', '.join(dupes)}")
+    _check_lengths(raw, specs, where)
+    options, scope = _normalize_options(raw, option_codes, where)
     features = raw.get("features") or []
     if isinstance(features, str):
         features = [f.strip() for f in features.split(";") if f.strip()]
@@ -121,14 +123,46 @@ def normalize_model(raw: dict, option_codes: set[str]) -> dict:
         "published": bool(raw.get("published", False)), "popular": bool(raw.get("popular", False)),
         "sort": int(raw.get("sort", 100) or 100), "short": str(raw.get("short", "")).strip(),
         "description": str(raw.get("description", "")).strip(), "features": tuple(features),
-        "specs": specs, "variants": variants, "options": options, "colors": raw.get("colors"),
+        "specs": specs, "variants": variants, "options": options, "option_scope": scope,
+        "colors": raw.get("colors"),
     }
 
 
+TEXT_LIMITS = {"line": 20, "short": 200, "motor_layout": 60, "battery_type": 60, "brakes": 120,
+               "suspension_front": 120, "suspension_rear": 120, "tyre_front": 40, "tyre_rear": 60, "tyre_kind": 40}
+EMPTY_WORDS = {"", "-", "нет", "none"}
+
+
+def _check_lengths(raw: dict, specs: dict, where: str) -> None:
+    values = {**specs, "line": str(raw.get("line", "")), "short": str(raw.get("short", ""))}
+    too_long = [k for k, limit in TEXT_LIMITS.items() if len(str(values.get(k, ""))) > limit]
+    if too_long:
+        raise CatalogError(f"{where}: слишком длинные значения: {', '.join(too_long)}")
+
+
+def _normalize_options(raw: dict, option_codes: set[str], where: str) -> tuple[dict | None, tuple | None]:
+    """None — колонок опций нет, опции модели не трогаем. scope — какие опции описаны в файле."""
+    raw_options = raw.get("options")
+    if raw_options is None:
+        return None, None
+    options = {}
+    for code, value in raw_options.items():
+        if code not in option_codes:
+            raise CatalogError(f"{where}: неизвестная опция «{code}» (добавьте её в справочник опций)")
+        text = str(value if value is not None else "").strip().lower()
+        if text in EMPTY_WORDS:
+            continue
+        options[code] = "included" if text in INCLUDED_WORDS else str(to_decimal(value, f"{where}, опция {code}"))
+    scope = raw.get("option_scope")
+    return options, (tuple(scope) if scope is not None else None)
+
+
 def _normalize_variant(raw: dict, where: str) -> dict:
-    label = str(raw.get("label", "")).strip()
+    label = str(raw.get("label", "") or "").strip()
     if not label:
         raise CatalogError(f"{where}: нет названия варианта")
+    if len(label) > 80:
+        raise CatalogError(f"{where}: название варианта длиннее 80 символов")
     variant = {"label": label, "price_usd": to_decimal(raw.get("price_usd"), f"{where}, цена")}
     for key in VARIANT_FIELDS:
         value = raw.get(key)
@@ -178,7 +212,7 @@ def _variant_key(label: str, price, fields: dict) -> tuple:
     return (label, str(price) if price is not None else None, extras)
 
 
-def compare(models: list[dict]) -> CatalogReport:
+def compare(models: list[dict], update_publication: bool = True) -> CatalogReport:
     existing = {m.slug: m for m in Motorcycle.objects.prefetch_related("variants", "options__option")}
     changes = []
     for item in models:
@@ -191,11 +225,15 @@ def compare(models: list[dict]) -> CatalogReport:
         diffs = [f"{k}: «{old['specs'][k]}» → «{v}»" for k, v in item["specs"].items() if old["specs"].get(k) != v]
         diffs += [f"{k}: «{old[k]}» → «{item[k]}»" for k in ("name", "line", "type", "short", "sort") if old[k] != item[k]]
         diffs += [f"{k} изменено" for k in ("description", "features") if old[k] != item[k]]
-        diffs += [f"публикация {k}: {old[k]} → {item[k]}" for k in ("published", "popular") if old[k] != item[k]]
+        if update_publication:
+            diffs += [f"публикация {k}: {old[k]} → {item[k]}" for k in ("published", "popular") if old[k] != item[k]]
         if old["variants"] != new_variants:
             diffs.append("варианты/цены изменены")
-        if old["options"] != item["options"]:
-            diffs.append("опции изменены")
+        if item["options"] is not None:
+            scope = item.get("option_scope")
+            old_options = {k: v for k, v in old["options"].items() if scope is None or k in scope}
+            if old_options != item["options"]:
+                diffs.append("опции изменены")
         changes.append(ModelChange(item["slug"], item["name"], "changed" if diffs else "unchanged", tuple(diffs)))
     slugs = {m["slug"] for m in models}
     missing = tuple(sorted(s for s in existing if s not in slugs))
@@ -215,7 +253,7 @@ def apply(models: list[dict], update_publication: bool = True) -> int:
             defaults |= {"is_published": item["published"], "is_popular": item["popular"]}
         moto, _ = Motorcycle.objects.update_or_create(slug=item["slug"], defaults=defaults)
         _sync_variants(moto, item["variants"])
-        _sync_options(moto, item["options"], option_ids)
+        _sync_options(moto, item["options"], item.get("option_scope"), option_ids)
         codes = item["colors"]
         if codes is not None:  # нет колонки цветов — выбранные владельцем цвета не трогаем
             moto.colors.set(all_colors if codes == "all" else [c for c in all_colors if c.code in set(codes)])
@@ -232,7 +270,9 @@ def _sync_variants(moto: Motorcycle, variants: tuple[dict, ...]) -> None:
     moto.variants.exclude(pk__in=keep).delete()
 
 
-def _sync_options(moto: Motorcycle, options: dict, option_ids: dict) -> None:
+def _sync_options(moto: Motorcycle, options: dict | None, scope: tuple | None, option_ids: dict) -> None:
+    if options is None:
+        return
     for code, value in options.items():
         included = value == "included"
         MotorcycleOption.objects.update_or_create(
@@ -240,4 +280,7 @@ def _sync_options(moto: Motorcycle, options: dict, option_ids: dict) -> None:
             defaults={"status": "included" if included else "optional",
                       "price_usd": None if included else Decimal(value)},
         )
-    moto.options.exclude(option__code__in=list(options)).delete()
+    stale = moto.options.exclude(option__code__in=list(options))
+    if scope is not None:  # удаляем только опции, колонки которых есть в файле
+        stale = stale.filter(option__code__in=list(scope))
+    stale.delete()

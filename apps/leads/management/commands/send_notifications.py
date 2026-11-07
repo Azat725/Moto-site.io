@@ -1,3 +1,4 @@
+import logging
 import signal
 import time
 
@@ -5,6 +6,8 @@ from django.core.management.base import BaseCommand
 from django.db import close_old_connections
 
 from apps.leads.delivery import process_due
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -24,5 +27,8 @@ class Command(BaseCommand):
         signal.signal(signal.SIGTERM, lambda *_: running.update(on=False))
         while running["on"]:
             close_old_connections()
-            process_due()
+            try:
+                process_due()
+            except Exception:  # процесс-отправитель не должен падать из-за одной ошибки (БД занята и т. п.)
+                logger.exception("Ошибка в цикле отправки уведомлений")
             time.sleep(options["interval"])

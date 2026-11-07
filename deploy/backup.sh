@@ -1,6 +1,7 @@
 #!/bin/sh
 # Ежедневная резервная копия БД (корректно для режима WAL) и фото. Запуск из cron: 30 3 * * *
 set -eu
+umask 077
 STAMP=$(date +%Y%m%d)
 mkdir -p /srv/ivax/backups
 sqlite3 /srv/ivax/data/db.sqlite3 ".backup '/srv/ivax/backups/db-$STAMP.sqlite3'"

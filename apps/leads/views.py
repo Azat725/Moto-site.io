@@ -4,7 +4,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .forms import LeadForm
-from .ratelimit import client_ip, hit
+from .models import Lead
+from .ratelimit import client_ip, limit_key, over_limit
 from .services import create_lead, hash_ip
 
 
@@ -28,9 +29,9 @@ def create(request):
         fields = {k: [str(e) for e in v] for k, v in form.errors.items() if k != "__all__"}
         return _error(request, 400, "Проверьте поля формы.", fields)
 
-    ip = client_ip(request)
+    ip = limit_key(client_ip(request))
     limit, window = settings.LEAD_RATE_LIMIT
-    if not hit(f"lead:{hash_ip(ip)}", limit, window):
+    if over_limit(Lead.objects.filter(ip_hash=hash_ip(ip)), limit, window):
         return _error(request, 429, "Слишком много заявок. Попробуйте позже или позвоните нам.")
 
     lead = create_lead(form.cleaned_data, ip)

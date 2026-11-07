@@ -1,0 +1,17 @@
+# /etc/systemd/system/ivax-purge.service — обезличивание старых заявок (срок хранения ПДн), отдельно от курса
+[Unit]
+Description=IV&AX MOTO: purge personal data past retention
+
+[Service]
+Type=oneshot
+User=ivax
+Group=ivax
+UMask=0027
+WorkingDirectory=/srv/ivax/app
+EnvironmentFile=/srv/ivax/app/.env
+Environment=DJANGO_SETTINGS_MODULE=config.settings.prod
+ExecStart=/srv/ivax/app/.venv/bin/python manage.py purge_leads
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/ivax/data

@@ -1,3 +1,5 @@
+from contextvars import ContextVar
+
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -8,6 +10,9 @@ from . import pricing
 from .admin_import import CatalogImportView, export_catalog_xlsx
 from .models import Color, Motorcycle, MotorcycleOption, OptionDef, Photo, SiteSettings, Variant
 from .services import current_context
+
+
+PRICE_CTX: ContextVar = ContextVar("price_ctx", default=None)
 
 
 def _rub(value: int | None) -> str:
@@ -88,8 +93,11 @@ class MotorcycleAdmin(admin.ModelAdmin):
         return super().get_queryset(request).prefetch_related("variants")
 
     def changelist_view(self, request, extra_context=None):
-        self._price_ctx = current_context()  # один расчёт курса на страницу списка
-        return super().changelist_view(request, extra_context)
+        token = PRICE_CTX.set(current_context())  # один расчёт курса на страницу списка
+        try:
+            return super().changelist_view(request, extra_context)
+        finally:
+            PRICE_CTX.reset(token)
 
     @admin.display(description="Мощность")
     def power(self, obj):
@@ -97,20 +105,20 @@ class MotorcycleAdmin(admin.ModelAdmin):
 
     @admin.display(description="Цена от")
     def price_from(self, obj):
-        ctx = getattr(self, "_price_ctx", None) or current_context()
+        ctx = PRICE_CTX.get() or current_context()
         prices = [pricing.ceil_to_step(k, ctx.step) for v in obj.variants.all()
                   if (k := pricing.variant_kopecks(v.price_usd, ctx)) is not None]
         return _rub(min(prices, default=None))
 
-    @admin.action(description="Опубликовать")
+    @admin.action(description="Опубликовать", permissions=["change"])
     def publish(self, request, queryset):
         queryset.update(is_published=True)
 
-    @admin.action(description="Снять с публикации")
+    @admin.action(description="Снять с публикации", permissions=["change"])
     def unpublish(self, request, queryset):
         queryset.update(is_published=False)
 
-    @admin.action(description="Создать копию (неопубликованную)")
+    @admin.action(description="Создать копию (неопубликованную)", permissions=["add"])
     def duplicate(self, request, queryset):
         for moto in queryset:
             with transaction.atomic():
