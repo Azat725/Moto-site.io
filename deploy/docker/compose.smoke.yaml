@@ -1,5 +1,7 @@
 # Только для scripts/docker_smoke.py: изолированный HTTP без домена/TLS и случайный локальный порт.
 services:
   caddy:
+    volumes:
+      - ${IVAX_SMOKE_CADDYFILE:?}:/etc/caddy/Caddyfile:ro
     ports: !override
       - "127.0.0.1::80"

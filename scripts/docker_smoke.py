@@ -20,14 +20,19 @@ def main():
     project = "ivax-smoke-" + secrets.token_hex(4)
     with tempfile.TemporaryDirectory(prefix="ivax-docker-smoke-") as temporary:
         env_file = Path(temporary) / ".env"
+        caddyfile = Path(temporary) / "Caddyfile"
+        # Внешний тестовый HTTP изображает TLS-терминацию proxy; защита Django остаётся production.
+        caddyfile.write_text((ROOT / "deploy/docker/Caddyfile").read_text().replace(
+            "header_up X-Forwarded-Proto {scheme}", "header_up X-Forwarded-Proto https"), encoding="utf-8")
         values = {
             "IVAX_ENV_FILE": str(env_file), "COMPOSE_PROJECT_NAME": project, "IVAX_IMAGE_TAG": project,
+            "IVAX_SMOKE_CADDYFILE": str(caddyfile),
             "COMPOSE_FILE": "compose.yaml" + os.pathsep + "deploy/docker/compose.smoke.yaml",
             "DJANGO_SECRET_KEY": secrets.token_urlsafe(64), "IP_HASH_SALT": secrets.token_urlsafe(32),
             "ADMIN_PATH": "smoke-only-admin/", "DJANGO_ALLOWED_HOSTS": "example.test",
             "DJANGO_CSRF_TRUSTED_ORIGINS": "https://example.test", "SITE_DOMAIN": "https://example.test",
             "CADDY_SITE_ADDRESSES": "http://example.test", "SITE_NOINDEX": "true",
-            "SECURE_SSL_REDIRECT": "false", "RATE_SOURCES": "", "TELEGRAM_BOT_TOKEN": "",
+            "SECURE_SSL_REDIRECT": "true", "RATE_SOURCES": "", "TELEGRAM_BOT_TOKEN": "",
             "TELEGRAM_CHAT_ID": "", "LEAD_NOTIFY_EMAILS": "", "DOCKER_SUBNET": "172.30.251.0/24",
             "CADDY_CONTAINER_IP": "172.30.251.2",
         }
@@ -89,6 +94,12 @@ def main():
             python("maintenance", backup)
             print(json.dumps({"docker_smoke": "passed", "models_preserved": 15,
                               "media_preserved": True, "backup_verified": True}))
+        except Exception:
+            try:
+                command("logs", "--tail", "80")
+            except subprocess.CalledProcessError:
+                pass
+            raise
         finally:
             # Имя сгенерировано этим запуском; production-тома и другие проекты не затрагиваются.
             command("down", "--volumes", "--remove-orphans")
