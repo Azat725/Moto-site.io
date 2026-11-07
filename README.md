@@ -1,62 +1,97 @@
-# Moto-site.io — сайт мотосалона IV&AX MOTO
+# Moto-site.io — сайт IV&AX MOTO (электромотоциклы)
 
-Витрина мотоциклов (Нижнекамск): каталог, страницы моделей, тест-драйв, рассрочка, калькулятор, юридические документы РФ, cookie-согласие, SEO-разметка.
-Чистые **HTML + CSS + JS** без фреймворков; страницы собираются из шаблонов небольшим скриптом на Node.js.
+Сайт продажи электромотоциклов в Нижнекамске: каталог из 15 моделей по прайсу поставщика, страница модели с
+конфигуратором (мощность и батарея, опции, цвет), заявка менеджеру, отзывы с модерацией, доставка и оплата,
+юридические документы РФ, cookie-согласие, SEO-разметка. Владелец управляет всем в админке Django.
 
-Палитра: красный `#E10600`, белый, чёрный. Тексты и картинки — **заглушки** (замените на реальные).
+- **Цена** = (цена варианта $ + опции $) × курс USD ЦБ РФ + наценка 100 000 ₽, с округлением вверх до 1 000 ₽.
+  Доставка не входит. Курс обновляется автоматически каждые 3 часа.
+- **Заказ** — только через менеджера: онлайн-оплаты и регистрации нет. Заявка сохраняется в базе, менеджеру
+  приходят уведомления в Telegram (без персональных данных) и на почту.
+- **Стек:** Python 3.13+, Django 6.1, SQLite, django-axes, WhiteNoise, gunicorn + Caddy; ванильные JS/CSS.
+- **Демо для согласования:** https://azat725.github.io/Moto-site.io/ (статический экспорт; формы не отправляются,
+  отзывы — образцы с пометкой, закрыто от поисковиков).
 
-> **Для ИИ-агентов (Codex, Kimi, Claude и др.):** сначала прочитайте [AGENTS.md](AGENTS.md) — контекст, правила проекта, работа в `dev` и влитие в `main` только после тестов.
+> **Для ИИ-агентов (Codex, Kimi, Claude и др.):** сначала прочитайте [AGENTS.md](AGENTS.md) — контекст, правила,
+> работа в `dev`/`feature/*` и влитие в `main` только после тестов.
 
-## Быстрый старт
+## Быстрый старт (локально)
 ```bash
-npm run build     # = node scripts/build.mjs — собрать страницы из src/ в корень репозитория
-npm run check     # сборка + проверка ссылок, title/description/h1/canonical, JSON-LD
-npm start         # локальный сервер http://localhost:5173 (без зависимостей)
-npm run og        # перерисовать assets/og-image.png (нужен установленный Chrome/Edge)
+python -m venv .venv
+# Windows: .venv\Scripts\activate      Linux/macOS: source .venv/bin/activate
+pip install -r requirements-dev.txt
+python manage.py migrate
+python manage.py seed_catalog        # 15 моделей, опции, цвета, фото из apps/catalog/seed/
+python manage.py update_rate         # курс USD с сайта ЦБ РФ
+python manage.py createsuperuser
+python manage.py runserver           # http://127.0.0.1:8000
 ```
-Нужен только Node.js 18+; внешних npm-пакетов нет. Сайт можно открыть и без Node — готовые `*.html` лежат в корне.
+`manage.py` по умолчанию использует `config.settings.dev` (DEBUG, письма выводятся в консоль, образцы отзывов).
+Админка: http://127.0.0.1:8000/manage-ivax/ (в продакшене путь задаётся случайным `ADMIN_PATH`).
+Файл `.env` локально не обязателен; переменные — в [.env.example](.env.example).
 
-## Анимации
-Прелоадер-тахометр (первый визит за сессию), красная шторка между страницами, побуквенный заголовок, «прорисовка» мотоцикла и «газ» по нажатию в hero, 3D-наклон карточек, магнитные кнопки, параллакс, счётчики, бегущая строка и кнопка-спидометр с прогрессом страницы. Анимируются только `transform`/`opacity`; при `prefers-reduced-motion` и на слабых устройствах всё упрощается или отключается.
+## Тесты
+```bash
+python -m pytest                                          # unit + integration
+python -m pytest --cov=apps --cov-fail-under=80           # как в CI
+RUN_E2E=1 python -m pytest -m e2e tests/e2e               # E2E Playwright в установленном Google Chrome
+# PowerShell: $env:RUN_E2E="1"; python -m pytest -m e2e tests/e2e
+```
+CI (`.github/workflows/ci.yml`) на каждый push в `dev`, `main`, `feature/**` и PR: `manage.py check`,
+`makemigrations --check`, pytest с покрытием ≥ 80 %, `check --deploy` с продакшен-настройками.
+
+## Статическое демо (GitHub Pages)
+```bash
+DJANGO_SETTINGS_MODULE=config.settings.pages python manage.py export_static   # → _site/
+python scripts/preview_pages.py                                                # → http://localhost:5174/Moto-site.io/
+```
+PowerShell: `$env:DJANGO_SETTINGS_MODULE="config.settings.pages"; python manage.py export_static`.
+Флаг `--no-rate` — собрать без обращения к ЦБ. Workflow `.github/workflows/pages.yml` собирает и публикует демо
+при каждом push в `main`, ежедневно в 16:00 МСК и вручную. Для работы нужно один раз включить
+**Settings → Pages → Source = GitHub Actions** (делает владелец репозитория).
 
 ## Структура
 ```
-src/pages/        шаблоны страниц (редактируем здесь)
-src/partials/     шапка, подвал, cookie-баннер, SVG-спрайт, layout
-src/data/         motorcycles.json — каталог моделей
-site.config.json  название, телефон, адрес, реквизиты, домен
-scripts/build.mjs генератор: страницы, bikes/*.html, sitemap.xml, robots.txt
-css/ js/ assets/  стили, скрипты, графика
-*.html, bikes/    результат сборки (коммитим, их отдаёт хостинг)
+config/            настройки (base, dev, test, pages, prod), urls.py, wsgi.py
+apps/catalog/      модели, варианты, опции, цвета, фото, цены, импорт/экспорт Excel, исходный прайс (seed/)
+apps/rates/        курс ЦБ РФ
+apps/leads/        заявки, очередь уведомлений, Telegram и e-mail
+apps/reviews/      отзывы с модерацией
+apps/pages/        страницы, SEO, экспорт демо
+templates/ static/ шаблоны, CSS, JS, графика
+tests/             unit, integration, e2e
+deploy/            systemd, Caddy, резервное копирование
+scripts/           предпросмотр демо, приглашение партнёра, служебные инструменты
+docs/              документация
 ```
 
+## Документация
+- [DEPLOYMENT_VPS.md](DEPLOYMENT_VPS.md) — полная инструкция SSH → установка → приёмка → обновление и восстановление
+- [docs/architecture.md](docs/architecture.md) — устройство кода, модель данных, цены, курс, безопасность
+- [docs/deploy-vps.md](docs/deploy-vps.md) — установка и обновление на сервере в РФ
+- [docs/admin-guide.md](docs/admin-guide.md) — инструкция для владельца по админке
+- [docs/import-format.md](docs/import-format.md) — формат таблицы импорта каталога
+- [CONTRIBUTING.md](CONTRIBUTING.md) — ветки и порядок работы, [AGENTS.md](AGENTS.md) — полные правила
+
 ## Ветки и партнёр-разработчик
-- `main` — стабильная версия, `dev` — рабочая. Подробности: [CONTRIBUTING.md](CONTRIBUTING.md).
-- **Добавить партнёра по ссылке** (владелец репозитория):
-  1. `winget install --id GitHub.cli` и один раз `gh auth login`;
-  2. `./scripts/invite-partner.ps1 -Login <github-логин-партнёра>`;
-  3. отправить партнёру ссылку из вывода: `https://github.com/<владелец>/Moto-site.io/invitations`.
+- `main` — стабильная (публикует демо, с неё обновляется сервер), `dev` — рабочая, `feature/*` — задачи.
+  В `main` — только после тестов. Подробнее: [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Добавить партнёра** (владелец репозитория): `winget install --id GitHub.cli`, один раз `gh auth login`, затем
+  `./scripts/invite-partner.ps1 -Login <github-логин-партнёра>` и отправить партнёру ссылку из вывода
+  (`https://github.com/<владелец>/Moto-site.io/invitations`). Либо *Settings → Collaborators → Add people*.
 
-  Либо через интерфейс: *Settings → Collaborators → Add people*.
+## Перед запуском рабочего сайта
+1. Сервер в РФ, домен, `.env`, службы — по [docs/deploy-vps.md](docs/deploy-vps.md).
+2. В админке «Настройки сайта» — реальные телефон, e-mail, адрес, продавец, ИНН, ОГРН (сейчас заглушки `[…]`).
+3. Юридические документы (`templates/pages/legal/`) — согласовать с юристом. **Шаблоны не заменяют консультацию юриста.**
+4. Уведомить Роскомнадзор об обработке персональных данных (ст. 22 152-ФЗ).
+5. Запросить у поставщика фото без водяного знака и загрузить их в админке.
+6. Снять `noindex` (`SITE_NOINDEX=false`) — только по решению владельца; затем Яндекс Вебмастер, Google Search Console.
 
-## Что заменить перед запуском
-1. `site.config.json` — реальные реквизиты, телефон, e-mail, адрес, домен, соцсети.
-2. `src/data/motorcycles.json` — реальные модели, цены, фото (положить в `assets/bikes/`).
-3. Юридические документы (`src/pages/privacy.html`, `consent.html`, `terms.html`, `cookies.html`) — места, помеченные `[…]`. **Шаблоны не заменяют консультацию юриста.**
-4. `js/config.js` — адрес обработчика форм (`formEndpoint`) и ID счётчиков (Яндекс.Метрика / GA): они загружаются только после согласия на cookie.
-5. Уведомить Роскомнадзор об обработке персональных данных (ст. 22 152-ФЗ), если применимо; хранить базу ПДн россиян на серверах в РФ.
+## Материалы
+- Прайс-листы поставщика (PDF) хранятся локально в `_private/` и в репозиторий не попадают. Фото моделей вырезаны
+  из прайса скриптом `scripts/tools/extract_bike_photos.py` (нужен `pymupdf`) и содержат водяной знак поставщика.
+- Бренд производителя и контакты поставщика на сайте не показываются; формулировка «под заказ» не используется.
+- `scripts/tools/make_brand_assets.py` — перегенерация `favicon.svg` и `og-image.png` (нужен Chrome или Edge).
 
-## Откуда заглушки
-- Структура сайта вдохновлена elmoto74.ru (шапка с городом и телефоном → герой → калькулятор → преимущества → популярные модели → о компании → форма звонка → подвал). Тексты, картинки и код оригинала не копировались.
-- Карточка Yamaha YZF-R3 2026 (1 000 км, Нижнекамск) сделана по мотивам объявления Avito. Само объявление не удалось открыть автоматически, поэтому характеристики взяты из общедоступных данных, **цена условная**. Фото с Avito не использовались (чужие права) — вместо них SVG-иллюстрации.
-- Остальные 7 моделей — демо-данные с вымышленными названиями.
-
-## Публикация на GitHub Pages
-Сайт отдаётся из ветки `main`, корень репозитория: https://azat725.github.io/Moto-site.io/ (репозиторий публичный — на бесплатном тарифе Pages иначе недоступен). Пока домен тестовый, в `site.config.json` стоит `"noindex": true` — сайт закрыт от поисковиков (`robots.txt` и meta robots).
-**При запуске на своём домене:** впишите `domain`, поставьте `"noindex": false`, выполните `npm run build`, закоммитьте, добавьте домен в Settings → Pages (файл `CNAME`).
-
-## SEO-чек-лист после публикации
-- Привязать домен, включить HTTPS, прописать его в `site.config.json` и пересобрать.
-- Добавить сайт в **Яндекс Вебмастер**, **Google Search Console**, **Bing Webmaster Tools**, отправить `sitemap.xml`; вставить коды верификации в `site.config.json`.
-- Создать карточки в Яндекс Бизнес / Google Business Profile / 2ГИС (адрес, телефон — как на сайте).
-- Позиции в выдаче зависят от конкурентов, возраста домена и ссылок — гарантировать их нельзя; сайт технически подготовлен (семантика, schema.org, скорость, мобильная версия).
+Лицензия: проприетарная, см. [LICENSE](LICENSE).
